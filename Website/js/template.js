@@ -39,14 +39,14 @@ $(document).ready(function(){
 	//Contact Us Map
 	if($('#contact-us-map').length > 0){ //Checks if there is a map element
 		var map = L.map('contact-us-map', {
-			center: [51.502, -0.09],
+			center: [34.419291, -103.202150],
 			scrollWheelZoom: false,
 			zoom: 15
 		});
 		L.tileLayer('http://{s}.tile.cloudmade.com/{key}/22677/256/{z}/{x}/{y}.png', {
 			key: 'BC9A493B41014CAABB98F0471D759707'
 		}).addTo(map);
-		L.marker([51.5, -0.09]).addTo(map).bindPopup("<b>MoDev Systems</b><br/>309 E 21st St #2435<br/>Austin, TX 78705").openPopup();
+		L.marker([34.419291, -103.202150]).addTo(map).bindPopup("<b>MoDev Systems</b><br/>309 E 21st St #2435<br/>Austin, TX 78705").openPopup();
 	}
 
 	$( window ).resize(function() {
