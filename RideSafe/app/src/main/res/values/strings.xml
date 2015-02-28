@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">RideSafe</string>
+    <string name="title_activity_maps">RideSafe</string>
+    <string name="google_maps_key">AIzaSyDSOi6dAW048ak0fgaAnHfr0fKFSGlPurY</string>
+</resources>
