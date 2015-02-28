@@ -21,6 +21,7 @@
 		<link rel="stylesheet" href="css/main.css">
 
         <script src="js/modernizr-2.6.2-respond-1.1.0.min.js"></script>
+        <link href="font-awesome/css/font-awesome.min.css" rel="stylesheet" type="text/css">
     </head>
     <body>
         <!--[if lt IE 7]>
@@ -67,8 +68,8 @@
 	        	<div class="row">
 	        		<div class="col-sm-7">
 	        			<!-- Map -->
-	        			<div id="contact-us-map">
-
+	        			<div id="contact-us-map" >
+                            <iframe src="https://www.google.com/maps/embed?pb=!1m14!1m8!1m3!1d6890.7921977188025!2d-97.73532450317995!3d30.28278346308615!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x8644b59bdf224df7%3A0xb12862944f4331f4!2s309+E+21st+St+%232435%2C+The+University+of+Texas+at+Austin%2C+Austin%2C+TX+78705!5e0!3m2!1sen!2sus!4v1425158500081 " frameborder="0" style="border:0; height:100%; width:100%;"></iframe>
 	        			</div>
 	        			<!-- End Map -->
 	        			<!-- Contact Info -->
@@ -83,42 +84,39 @@
 	        			<!-- Contact Form -->
 	        			<h3>Send Us a Message</h3>
 	        			<div class="contact-form-wrapper">
-		        			<form class="form-horizontal" role="form">
-		        				 <div class="form-group">
-		        				 	<label for="Name" class="col-sm-3 control-label"><b>Your name</b></label>
-		        				 	<div class="col-sm-9">
-										<input class="form-control" id="Name" type="text" placeholder="">
-									</div>
-								</div>
-								<div class="form-group">
-									<label for="contact-email" class="col-sm-3 control-label"><b>Your Email</b></label>
-									<div class="col-sm-9">
-										<input class="form-control" id="contact-email" type="text" placeholder="">
-									</div>
-								</div>
-								<div class="form-group">
-									<label for="contact-message" class="col-sm-3 control-label"><b>Select Topic</b></label>
-									<div class="col-sm-9">
-										<select class="form-control" id="prependedInput">
-											<option>Please select topic...</option>
-											<option>General</option>
-											<option>Services</option>
-											<option>Orders</option>
-										</select>
-									</div>
-								</div>
-								<div class="form-group">
-									<label for="contact-message" class="col-sm-3 control-label"><b>Message</b></label>
-									<div class="col-sm-9">
-										<textarea class="form-control" rows="5" id="contact-message"></textarea>
-									</div>
-								</div>
-								<div class="form-group">
-									<div class="col-sm-12">
-										<button type="submit" class="btn pull-right">Send</button>
-									</div>
-								</div>
-		        			</form>
+		        			            <form name="sentMessage" id="contactForm" novalidate>
+                <div class="control-group form-group">
+                    <div class="input-group margin-bottom-sm">
+                        <span class="input-group-addon"><i class="fa fa-pencil-square-o fa-fw"></i></span>
+                        <input type="text" class="form-control" id="name"  placeholder="Full Name" required>  
+                    </div>
+                </div>
+
+                <div class="control-group form-group">
+                    <div class="input-group margin-bottom-sm">
+                        <span class="input-group-addon"><i class="fa fa-phone fa-fw"></i></span>
+                        <input type="tel" class="form-control" id="phone"  placeholder="Phone Number" required>  
+                    </div>
+                </div>
+
+                <div class="control-group form-group">
+                    <div class="input-group margin-bottom-sm \">
+                        <span class="input-group-addon "><i class="fa fa-envelope-o fa-fw"></i></span>
+                        <input type="email" class="form-control " id="email"  placeholder="Email"  data-validation-required-message="Please enter a valid email address.">
+                    </div>
+                    <div class="controls"></div>
+                </div>
+
+                <div class="control-group form-group">
+                    <div class="controls">
+                        <textarea rows="10" cols="100" class="form-control" id="message" placeholder="Message"  maxlength="999" style="resize:none" required data-validation-required-message="Please check required fields."></textarea>
+                    </div>
+                </div>
+
+                <div id="success"></div>
+                <!-- For success/fail messages -->
+                <button type="submit" class="btn btn-primary"><i class="fa fa-send-o fa-fw"></i>Send Message</button>
+            </form>
 		        		</div>
 		        		<!-- End Contact Info -->
 	        		</div>
@@ -166,15 +164,10 @@
 	    </div>
 
         <!-- Javascripts -->
-        <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
-        <script>window.jQuery || document.write('<script src="js/jquery-1.9.1.min.js"><\/script>')</script>
-        <script src="js/bootstrap.min.js"></script>
-        <script src="http://cdn.leafletjs.com/leaflet-0.5.1/leaflet.js"></script>
-        <script src="js/jquery.fitvids.js"></script>
-        <script src="js/jquery.sequence-min.js"></script>
-        <script src="js/jquery.bxslider.js"></script>
-        <script src="js/main-menu.js"></script>
-        <script src="js/template.js"></script>
+            <script src="js/jquery.js"></script>
+    <script src="js/bootstrap.min.js"></script>
+    <script src="js/jqBootstrapValidation.js"></script>
+    <script src="js/contact_me.js"></script>
 
     </body>
 </html>
