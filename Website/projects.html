@@ -10,14 +10,15 @@
         <meta name="description" content="">
         <meta name="viewport" content="width=device-width">
 
-        <link rel="stylesheet" href="css/bootstrap.min.css">
+        <link rel="stylesheet" href="css/bootstrap.css">
         <link rel="stylesheet" href="css/icomoon-social.css">
         <link href='http://fonts.googleapis.com/css?family=Open+Sans:400,700,600,800' rel='stylesheet' type='text/css'>
 
         <link rel="stylesheet" href="css/leaflet.css" />
 		<!--[if lte IE 8]>
 		    <link rel="stylesheet" href="css/leaflet.ie.css" />
-		<![endif]-->
+
+<![endif]-->
 		<link rel="stylesheet" href="css/main.css">
 
         <script src="js/modernizr-2.6.2-respond-1.1.0.min.js"></script>
@@ -26,14 +27,25 @@
         <!--[if lt IE 7]>
             <p class="chromeframe">You are using an <strong>outdated</strong> browser. Please <a href="http://browsehappy.com/">upgrade your browser</a> or <a href="http://www.google.com/chromeframe/?redirect=true">activate Google Chrome Frame</a> to improve your experience.</p>
         <![endif]-->
+        <!-- testnav -->
         
-
         <!-- Navigation & Logo-->
-        <div class="mainmenu-wrapper">
+        <div class="mainmenu-wrapper" style="padding-top:1em; padding-bottom:1em">
 	        <div class="container">
+                <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1" style="color:black">
+        <span class="sr-only"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+        <span class="logo-wrapper"><a href="index.html"><img src="img/modev-light.png" alt="MoDev Systems" height="50"></a></span>
+    </div>
+
+    <!-- Collect the nav links, forms, and other content for toggling -->
+    <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
 		        <nav id="mainmenu" class="mainmenu">
 					<ul>
-						<li class="logo-wrapper"><a href="index.html"><img src="img/modev-light.png" alt="MoDev Systems" height="50"></a></li>
 						<li>
 							<a href="index.html">Home</a>
 						</li>
@@ -44,7 +56,7 @@
 							<a href="contact.html">Contact</a>
 						</li>
 						<li class="active">
-							<a href="projects.html">Projects</a>
+							<a href="projects.html">Projects</a>     
 						</li>
 					</ul>
 				</nav>
@@ -68,14 +80,14 @@
 					<div class="col-md-4 col-sm-6">
 						<div class="portfolio-item">
 							<div class="portfolio-image">
-								<a href="page-portfolio-item.html"><img src="img/projects/ridesafe/final%20icon.png" alt="RideSafe"></a>
+								<a href="ridesafe.html"><img src="img/projects/ridesafe/final%20icon.png" alt="Project Name"></a>
 							</div>
-							<div class="portfolio-info-fade">
+							<div class="portfolio-info">
 								<ul>
 									<li class="portfolio-project-name">RideSafe</li>
-									<li>A safety application for your mobile device!</li>
+									<li>A safety application for your mobile device.</li>
 									<li>Built for HackDFW 2015</li>
-									<li class="read-more"><a href="ridesafe.html" class="btn">Read more</a></li>
+									<li class="read-more"><a href="RideSafe.html" class="btn">Read more</a></li>
 								</ul>
 							</div>
 						</div>
@@ -83,28 +95,28 @@
 					<div class="col-md-4 col-sm-6">
 						<div class="portfolio-item">
 							<div class="portfolio-image">
-								<a href="page-portfolio-item.html"><img src="img/projects/devscrow/devfull.png" alt="Project Name"></a>
+								<a href="page-portfolio-item.html"><img src="img/projects/devscrow/devblurb.png" alt="Project Name"></a>
 							</div>
-							<div class="portfolio-info-fade">
+							<div class="portfolio-info">
 								<ul>
-									<li class="portfolio-project-name">Devscrow</li>
-									<li>An upcoming project. Check here for more updates!</li>
-									<li>Built by MoDev</li>
+									<li class="portfolio-project-name">devscrow</li>
+									<li>An escrow service built to bridge the gap between developers, graphic designers, and their content.</li>
+									<li>Built March 2015</li>
 									<li class="read-more"><a href="devscrow.html" class="btn">Read more</a></li>
 								</ul>
 							</div>
 						</div>
 					</div>
-					
+				</div>
+			</div>
 		</div>
-    </div>
-</div>
+
 	    <!-- Footer -->
 	   <div class="footer">
 	    	<div class="container">
 		    	<div class="row">
 		    		<div class="col-footer col-md-3 col-xs-6">
-		  	<h3>Navigate</h3>
+		    			<h3>Navigate</h3>
 		    			<ul class="no-list-style footer-navigate-section">
 		    				<li><a href="index.html">Home</a></li>
 		    				<li><a href="team.html">Team</a></li>
@@ -115,7 +127,7 @@
 		    		
 		    		<div class="col-footer col-md-4 col-xs-6">
 		    			<h3>Contact</h3>
-		    			<p class="contact-us-details">
+		    			<p class="contact-details">
 	        				<b>Address:</b> 309 E 21st St #2435, Austin, TX 78705<br/>
 	        				<b>Phone:</b> Email us for our phone number!<br/>
 	        				<b>Email:</b> <a href="mailto:modevsystems@gmail.com">modevsystems@gmail.com</a>
