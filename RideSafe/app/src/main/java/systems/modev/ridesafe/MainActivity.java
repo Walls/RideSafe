@@ -16,6 +16,7 @@
 
 package systems.modev.ridesafe;
 
+import com.firebase.client.Firebase;
 import android.content.Context;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
@@ -24,15 +25,16 @@ import android.os.Bundle;
 import android.os.Vibrator;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.ActionBarActivity;
+import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.widget.CompoundButton;
 import android.telephony.SmsManager;
+import android.widget.ImageView;
 import android.widget.Toast;
 import android.widget.ToggleButton;
 
-import com.firebase.client.Firebase;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.GoogleApiClient.ConnectionCallbacks;
@@ -41,9 +43,15 @@ import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.text.DateFormat;
 import java.util.Date;
-
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
@@ -75,6 +83,9 @@ public class MainActivity extends ActionBarActivity implements
     protected final static String LAST_UPDATED_TIME_STRING_KEY = "last-updated-time-string-key";
     protected GoogleMap mMap;
     protected String phoneNumber;
+
+    protected Firebase myFirebaseRef;
+
 
     /**
      * Provides the entry point to Google Play services.
@@ -108,18 +119,24 @@ public class MainActivity extends ActionBarActivity implements
      */
     protected Boolean mRequestingLocationUpdates;
 
-    protected Firebase myFirebaseRef;
 
     /**
      * Time when the location was updated represented as a String.
-     */g
+     */
     protected String mLastUpdateTime;
     @Override
     public void onCreate(Bundle savedInstanceState) {
-        link = "";
         super.onCreate(savedInstanceState);
         Firebase.setAndroidContext(this);
-        myFirebaseRef = new Firebase("https://dazzling-torch-5228.firebaseio.com/");
+
+        try {
+            phoneNumber = read("number.txt", getApplicationContext());
+        }
+
+        catch (Exception e) {
+            e.printStackTrace();
+        }
+
         setContentView(R.layout.activity_maps);
 
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
@@ -139,13 +156,17 @@ public class MainActivity extends ActionBarActivity implements
 
                 if (isChecked) { // if the user just enabled updates
                     startLocationUpdates();
-                    mToggleButton.setBackground(getResources().getDrawable(R.drawable.endtrackingbutton));
+                    mToggleButton.setBackground(getResources().getDrawable(R.drawable.endtrackingbuttonsmall));
+                    SmsManager.getDefault().sendTextMessage(phoneNumber, null, "I pressed the TRACK button in RideSafe! " +
+                            String.format("Please track me at: %s", link), null, null);
 
                 }
 
                 else { // if the user just disabled updates
                     stopLocationUpdates();
-                    mToggleButton.setBackground(getResources().getDrawable(R.drawable.begintrackingbutton));
+                    mToggleButton.setBackground(getResources().getDrawable(R.drawable.begintrackingbuttonsmall));
+                    SmsManager.getDefault().sendTextMessage(phoneNumber, null, "I pressed the STOP TRACKING button in RideSafe! "
+                        + "Thanks for watching out for me!", null, null);
                 }
 
             }
@@ -156,12 +177,26 @@ public class MainActivity extends ActionBarActivity implements
 
         // Kick off the process of building a GoogleApiClient and requesting the LocationServices
         // API.
-        setUpMapIfNeeded();
         buildGoogleApiClient();
+        setUpMapIfNeeded();
 
 
         ActionBar actionBar = getSupportActionBar();
         actionBar.setBackgroundDrawable(new ColorDrawable(Color.rgb(0, 209, 202)));
+        actionBar.setDisplayOptions(actionBar.getDisplayOptions() | ActionBar.DISPLAY_SHOW_CUSTOM);
+        ImageView imageView = new ImageView(actionBar.getThemedContext());
+        imageView.setScaleType(ImageView.ScaleType.CENTER);
+        imageView.setImageResource(R.drawable.newlogosmall);
+        ActionBar.LayoutParams layoutParams = new ActionBar.LayoutParams(ActionBar.LayoutParams.WRAP_CONTENT, ActionBar.LayoutParams.WRAP_CONTENT, Gravity.LEFT | Gravity.CENTER_VERTICAL);
+        layoutParams.rightMargin = 40;
+        imageView.setLayoutParams(layoutParams);
+        actionBar.setCustomView(imageView);
+        actionBar.setTitle("");
+
+
+        myFirebaseRef = `new Firebase("https://dazzling-torch-5228.firebaseio.com");
+
+
     }
 
     @Override
@@ -177,28 +212,48 @@ public class MainActivity extends ActionBarActivity implements
         switch (item.getItemId()) {
 
             case R.id.action_contacts:
-                if (null == phoneNumber)     {
-                    PromptDialog dlg = new PromptDialog(MainActivity.this, R.string.prompt_title, R.string.prompt_comment) {
+                PromptDialog dlg = new PromptDialog(MainActivity.this, R.string.prompt_title, R.string.prompt_comment) {
                         @Override
                         public boolean onOkClicked(String input) {
-                            phoneNumber = input;
-                            return true; // true = close dialog
+                            try {
+                                write("number.txt", getBaseContext(), input);
+                                phoneNumber = input;
+                                SmsManager.getDefault().sendTextMessage(phoneNumber, null, "I just set you as my trusted contact in RideSafe. "
+                                        + "Ask me about it!", null, null);
+                            }
+
+                            catch (Exception e) {
+                                e.printStackTrace();
+                            }
+
+                            return true;
                         }
                     };
-                    dlg.show();
+                dlg.show();
+                break;
 
-                }
 
-                else {
+            case R.id.action_help:
+                try {
                     SmsManager.getDefault().sendTextMessage(phoneNumber, null, "I pressed the HELP button in RideSafe! " +
-                            String.format("Please contact me, I could be in danger. Track me at %s", link), null, null);
-                    Toast.makeText(getApplicationContext(), String.format("Emergency message sent to %s", phoneNumber), Toast.LENGTH_SHORT).show();
+                            String.format("Can you make sure I'm okay at %s ?", link), null, null);
+
+                    Toast.makeText(getApplicationContext(), String.format("Emergency message sent to: %s", phoneNumber), Toast.LENGTH_SHORT).show();
                 }
+
+                catch (Exception e){  // file is malformed
+                    File file = new File("number.txt");
+                    file.delete();
+                    e.printStackTrace();
+                }
+
                 return true;
 
             default:
                 return super.onOptionsItemSelected(item);
         }
+
+        return true;
     }
 
     private void setUpMapIfNeeded() {
@@ -207,6 +262,8 @@ public class MainActivity extends ActionBarActivity implements
             // Try to obtain the map from the SupportMapFragment.
             mMap = ((SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map)).getMap();
             mMap.setMyLocationEnabled(true);
+
+
             // Check if we were successful in obtaining the map.
         }
     }
@@ -304,7 +361,7 @@ public class MainActivity extends ActionBarActivity implements
         }
 
         // firebase push
-        // myFirebaseRef.child(mLastUpdateTime).setValue(String.format("%f %f %f %f", pLatitude, pLongitude, mLatitude, mLongitude));
+        myFirebaseRef.child(mLastUpdateTime).setValue(String.format("%f %f", mLatitude, mLongitude));
     }
 
     /**
@@ -331,7 +388,6 @@ public class MainActivity extends ActionBarActivity implements
     protected void onPause() {
         super.onPause();
         // Stop location updates to save battery, but don't disconnect the GoogleApiClient object.
-
 
         if(mGoogleApiClient.isConnected()) stopLocationUpdates();
     }
@@ -414,5 +470,35 @@ public class MainActivity extends ActionBarActivity implements
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
+        mMap.getUiSettings().setMyLocationButtonEnabled(false);
     }
+
+    public static void write (String filename,Context c,String string) throws IOException {
+        try {
+            FileOutputStream fos = c.openFileOutput(filename, Context.MODE_PRIVATE);
+            fos.write(string.getBytes());
+            fos.close();
+        } catch (FileNotFoundException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+
+    }
+
+    public static String read (String filename,Context c) throws IOException{
+        String read = "";
+        StringBuffer buffer = new StringBuffer();
+
+        FileInputStream fis = c.openFileInput(filename);
+        BufferedReader reader = new BufferedReader(new InputStreamReader(fis));
+        if (fis!=null) {
+            while ((read = reader.readLine()) != null) {
+                buffer.append(read + "\n" );
+            }
+        }
+        fis.close();
+        return buffer.toString();
+    }
+
+
 }

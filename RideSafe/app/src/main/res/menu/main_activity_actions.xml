@@ -1,9 +1,16 @@
 <menu xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:android="http://schemas.android.com/apk/res/android" >
 
-    <!-- Contacts, should always be in the overflow -->
+
+    <item android:id="@+id/action_help"
+        android:icon="@drawable/purewhiteicon"
+        android:title="@string/action_help"
+        app:showAsAction="ifRoom" />
+
+
+    <!-- Contacts, should not be in the overflow -->
     <item android:id="@+id/action_contacts"
-        android:icon="@drawable/contacticon"
+        android:icon="@drawable/purewhitecontacts"
         android:title="@string/action_contact"
         app:showAsAction="ifRoom" />
 </menu>

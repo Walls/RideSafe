@@ -6,6 +6,7 @@
     <string name="start_updates">Updates Started!</string>
     <string name="stop_updates">Updates Stopped!</string>
     <string name="action_contact">Contacts</string>
+    <string name="action_help">Help!</string>
     <string name="prompt_title">"Trusted Contact"</string>
     <string name="prompt_comment">"Input a trusted phone number."</string>
 </resources>

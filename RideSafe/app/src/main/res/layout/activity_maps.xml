@@ -30,6 +30,6 @@
         android:layout_alignParentEnd="true"
         android:textOff=""
         android:textOn=""
-        android:background="@drawable/begintrackingbutton" />
+        android:background="@drawable/begintrackingbuttonsmall" />
 
 </RelativeLayout>
