@@ -24,7 +24,12 @@ import android.os.Bundle;
 import android.os.Vibrator;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.ActionBarActivity;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.widget.CompoundButton;
+import android.telephony.SmsManager;
+import android.widget.Toast;
 import android.widget.ToggleButton;
 
 import com.firebase.client.Firebase;
@@ -69,6 +74,7 @@ public class MainActivity extends ActionBarActivity implements
     protected final static String LOCATION_KEY = "location-key";
     protected final static String LAST_UPDATED_TIME_STRING_KEY = "last-updated-time-string-key";
     protected GoogleMap mMap;
+    protected String phoneNumber;
 
     /**
      * Provides the entry point to Google Play services.
@@ -84,6 +90,8 @@ public class MainActivity extends ActionBarActivity implements
      * Represents a geographical location.
      */
     protected Location mCurrentLocation;
+
+    protected String link;
 
     // UI Widgets.
     protected ToggleButton mToggleButton;
@@ -104,10 +112,11 @@ public class MainActivity extends ActionBarActivity implements
 
     /**
      * Time when the location was updated represented as a String.
-     */
+     */g
     protected String mLastUpdateTime;
     @Override
     public void onCreate(Bundle savedInstanceState) {
+        link = "";
         super.onCreate(savedInstanceState);
         Firebase.setAndroidContext(this);
         myFirebaseRef = new Firebase("https://dazzling-torch-5228.firebaseio.com/");
@@ -155,6 +164,43 @@ public class MainActivity extends ActionBarActivity implements
         actionBar.setBackgroundDrawable(new ColorDrawable(Color.rgb(0, 209, 202)));
     }
 
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        // Inflate the menu items for use in the action bar
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.main_activity_actions, menu);
+        return super.onCreateOptionsMenu(menu);
+    }
+
+    public boolean onOptionsItemSelected(MenuItem item) {
+        // Handle presses on the action bar items
+        switch (item.getItemId()) {
+
+            case R.id.action_contacts:
+                if (null == phoneNumber)     {
+                    PromptDialog dlg = new PromptDialog(MainActivity.this, R.string.prompt_title, R.string.prompt_comment) {
+                        @Override
+                        public boolean onOkClicked(String input) {
+                            phoneNumber = input;
+                            return true; // true = close dialog
+                        }
+                    };
+                    dlg.show();
+
+                }
+
+                else {
+                    SmsManager.getDefault().sendTextMessage(phoneNumber, null, "I pressed the HELP button in RideSafe! " +
+                            String.format("Please contact me, I could be in danger. Track me at %s", link), null, null);
+                    Toast.makeText(getApplicationContext(), String.format("Emergency message sent to %s", phoneNumber), Toast.LENGTH_SHORT).show();
+                }
+                return true;
+
+            default:
+                return super.onOptionsItemSelected(item);
+        }
+    }
+
     private void setUpMapIfNeeded() {
         // Do a null check to confirm that we have not already instantiated the map.
         if (mMap == null) {
@@ -191,7 +237,6 @@ public class MainActivity extends ActionBarActivity implements
             if (savedInstanceState.keySet().contains(LAST_UPDATED_TIME_STRING_KEY)) {
                 mLastUpdateTime = savedInstanceState.getString(LAST_UPDATED_TIME_STRING_KEY);
             }
-            // updateCoords();
         }
     }
 
@@ -286,7 +331,9 @@ public class MainActivity extends ActionBarActivity implements
     protected void onPause() {
         super.onPause();
         // Stop location updates to save battery, but don't disconnect the GoogleApiClient object.
-        stopLocationUpdates();
+
+
+        if(mGoogleApiClient.isConnected()) stopLocationUpdates();
     }
 
     @Override
