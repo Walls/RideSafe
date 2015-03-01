@@ -16,12 +16,18 @@
 
 package systems.modev.ridesafe;
 
+import android.content.Context;
+import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
 import android.location.Location;
 import android.os.Bundle;
+import android.os.Vibrator;
+import android.support.v7.app.ActionBar;
 import android.support.v7.app.ActionBarActivity;
-import android.view.View;
+import android.widget.CompoundButton;
 import android.widget.ToggleButton;
 
+import com.firebase.client.Firebase;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.GoogleApiClient.ConnectionCallbacks;
@@ -35,11 +41,11 @@ import java.util.Date;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
-import com.google.android.gms.maps.MapFragment;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
-import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.maps.model.PolylineOptions;
 
 /**
  * Getting Location Updates.
@@ -81,8 +87,12 @@ public class MainActivity extends ActionBarActivity implements
 
     // UI Widgets.
     protected ToggleButton mToggleButton;
+
     protected double mLatitude;
     protected double mLongitude;
+
+    protected double pLatitude;
+    protected double pLongitude;
 
     /**
      * Tracks the status of the location updates request. Value changes when the user presses the
@@ -90,15 +100,21 @@ public class MainActivity extends ActionBarActivity implements
      */
     protected Boolean mRequestingLocationUpdates;
 
+    protected Firebase myFirebaseRef;
+
     /**
      * Time when the location was updated represented as a String.
      */
     protected String mLastUpdateTime;
-
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        Firebase.setAndroidContext(this);
+        myFirebaseRef = new Firebase("https://dazzling-torch-5228.firebaseio.com/");
         setContentView(R.layout.activity_maps);
+
+        SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
+        mapFragment.getMapAsync(this);
 
         // Locate the UI widgets.
         mToggleButton = (ToggleButton) findViewById(R.id.toggle_updates);
@@ -106,21 +122,44 @@ public class MainActivity extends ActionBarActivity implements
         mRequestingLocationUpdates = false;
         mLastUpdateTime = "";
 
+        mToggleButton.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton toggleButton, boolean isChecked) {
+                Vibrator vibrator = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
+                vibrator.vibrate(250);
+
+                if (isChecked) { // if the user just enabled updates
+                    startLocationUpdates();
+                    mToggleButton.setBackground(getResources().getDrawable(R.drawable.endtrackingbutton));
+
+                }
+
+                else { // if the user just disabled updates
+                    stopLocationUpdates();
+                    mToggleButton.setBackground(getResources().getDrawable(R.drawable.begintrackingbutton));
+                }
+
+            }
+        }) ;
+
         // Update values using data stored in the Bundle.
         updateValuesFromBundle(savedInstanceState);
 
         // Kick off the process of building a GoogleApiClient and requesting the LocationServices
         // API.
-        buildGoogleApiClient();
         setUpMapIfNeeded();
+        buildGoogleApiClient();
+
+
+        ActionBar actionBar = getSupportActionBar();
+        actionBar.setBackgroundDrawable(new ColorDrawable(Color.rgb(0, 209, 202)));
     }
 
     private void setUpMapIfNeeded() {
         // Do a null check to confirm that we have not already instantiated the map.
         if (mMap == null) {
             // Try to obtain the map from the SupportMapFragment.
-            mMap = ((SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map))
-                    .getMap();
+            mMap = ((SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map)).getMap();
             mMap.setMyLocationEnabled(true);
             // Check if we were successful in obtaining the map.
         }
@@ -152,9 +191,11 @@ public class MainActivity extends ActionBarActivity implements
             if (savedInstanceState.keySet().contains(LAST_UPDATED_TIME_STRING_KEY)) {
                 mLastUpdateTime = savedInstanceState.getString(LAST_UPDATED_TIME_STRING_KEY);
             }
-            updateUI();
+            // updateCoords();
         }
     }
+
+
 
     /**
      * Builds a GoogleApiClient. Uses the {@code #addApi} method to request the
@@ -184,48 +225,16 @@ public class MainActivity extends ActionBarActivity implements
      */
     protected void createLocationRequest() {
         mLocationRequest = new LocationRequest();
-
-        // Sets the desired interval for active location updates. This interval is
-        // inexact. You may not receive updates at all if no location sources are available, or
-        // you may receive them slower than requested. You may also receive updates faster than
-        // requested if other applications are requesting location at a faster interval.
         mLocationRequest.setInterval(5000);
-
-        // Sets the fastest rate for active location updates. This interval is exact, and your
-        // application will never receive updates faster than this value.
         mLocationRequest.setFastestInterval(5000);
-
         mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
     }
 
-    /**
-     * Handles the Start Updates button and requests start of location updates. Does nothing if
-     * updates have already been requested.
-     */
-    public void startUpdatesButtonHandler(View view) {
-        if (!mRequestingLocationUpdates) {
-            mRequestingLocationUpdates = true;
-            startLocationUpdates();
-        }
-    }
-
-    /**
-     * Handles the Stop Updates button, and requests removal of location updates. Does nothing if
-     * updates were not previously requested.
-     */
-    public void stopUpdatesButtonHandler(View view) {
-        if (mRequestingLocationUpdates) {
-            mRequestingLocationUpdates = false;
-            stopLocationUpdates();
-        }
-    }
 
     /**
      * Requests location updates from the FusedLocationApi.
      */
     protected void startLocationUpdates() {
-        // The final argument to {@code requestLocationUpdates()} is a LocationListener
-        // (http://developer.android.com/reference/com/google/android/gms/location/LocationListener.html).
         LocationServices.FusedLocationApi.requestLocationUpdates(
                 mGoogleApiClient, mLocationRequest, this);
     }
@@ -234,21 +243,29 @@ public class MainActivity extends ActionBarActivity implements
     /**
      * Updates the latitude, the longitude, and the last location time in the UI.
      */
-    private void updateUI() {
-        mLatitude = mCurrentLocation.getLatitude();
-        mLongitude = mCurrentLocation.getLongitude();
+    private void updateCoords() {
+        if (pLongitude == 0 || pLatitude == 0 || mLongitude == 0 || mLatitude == 0) {
+            pLatitude = mCurrentLocation.getLatitude();
+            pLongitude = mCurrentLocation.getLongitude();
+            mLatitude = mCurrentLocation.getLatitude();
+            mLongitude = mCurrentLocation.getLongitude();
+        }
+
+        else {
+            pLatitude = mLatitude;
+            pLongitude = mLongitude;
+            mLatitude = mCurrentLocation.getLatitude();
+            mLongitude = mCurrentLocation.getLongitude();
+        }
+
+        // firebase push
+        // myFirebaseRef.child(mLastUpdateTime).setValue(String.format("%f %f %f %f", pLatitude, pLongitude, mLatitude, mLongitude));
     }
 
     /**
      * Removes location updates from the FusedLocationApi.
      */
     protected void stopLocationUpdates() {
-        // It is a good practice to remove location requests when the activity is in a paused or
-        // stopped state. Doing so helps battery performance and is especially
-        // recommended in applications that request frequent location updates.
-
-        // The final argument to {@code requestLocationUpdates()} is a LocationListener
-        // (http://developer.android.com/reference/com/google/android/gms/location/LocationListener.html).
         LocationServices.FusedLocationApi.removeLocationUpdates(mGoogleApiClient, this);
     }
 
@@ -261,13 +278,8 @@ public class MainActivity extends ActionBarActivity implements
     @Override
     public void onResume() {
         super.onResume();
-        // Within {@code onPause()}, we pause location updates, but leave the
-        // connection to GoogleApiClient intact.  Here, we resume receiving
-        // location updates if the user has requested them.
 
-        if (mGoogleApiClient.isConnected() && mRequestingLocationUpdates) {
-            startLocationUpdates();
-        }
+       // startLocationUpdates();
     }
 
     @Override
@@ -290,26 +302,11 @@ public class MainActivity extends ActionBarActivity implements
      */
     @Override
     public void onConnected(Bundle bundle) {
-
-        // If the initial location was never previously requested, we use
-        // FusedLocationApi.getLastLocation() to get it. If it was previously requested, we store
-        // its value in the Bundle and check for it in onCreate(). We
-        // do not request it again unless the user specifically requests location updates by pressing
-        // the Start Updates button.
-        //
-        // Because we cache the value of the initial location in the Bundle, it means that if the
-        // user launches the activity,
-        // moves to a new location, and then changes the device orientation, the original location
-        // is displayed as the activity is re-created.
         if (mCurrentLocation == null) {
             mCurrentLocation = LocationServices.FusedLocationApi.getLastLocation(mGoogleApiClient);
             mLastUpdateTime = DateFormat.getTimeInstance().format(new Date());
-            updateUI();
         }
 
-        // If the user presses the Start Updates button before GoogleApiClient connects, we set
-        // mRequestingLocationUpdates to true (see startUpdatesButtonHandler()). Here, we check
-        // the value of mRequestingLocationUpdates and if it is true, we start location updates.
         if (mRequestingLocationUpdates) {
             startLocationUpdates();
         }
@@ -322,8 +319,29 @@ public class MainActivity extends ActionBarActivity implements
     public void onLocationChanged(Location location) {
         mCurrentLocation = location;
         mLastUpdateTime = DateFormat.getTimeInstance().format(new Date());
-        mMap.addMarker(new MarkerOptions().position(new LatLng(mCurrentLocation.getLatitude(), mCurrentLocation.getLongitude())));
-        updateUI();
+        // mMap.addMarker(new MarkerOptions().position(new LatLng(mCurrentLocation.getLatitude(), mCurrentLocation.getLongitude())));
+        mMap.addPolyline((new PolylineOptions()).add(new LatLng(pLatitude, pLongitude), new LatLng(mLatitude, mLongitude)).width(15).color(Color.rgb(217, 22, 176)).geodesic(true));
+
+        CameraPosition position =
+                new CameraPosition.Builder().target(new LatLng(mLatitude, mLongitude))
+                        .zoom(15.5f)
+                        .bearing(0)
+                        .tilt(25)
+                        .build();
+
+        mMap.animateCamera(CameraUpdateFactory.newCameraPosition(position), 1000, new GoogleMap.CancelableCallback() {
+            @Override
+            public void onFinish() {
+
+            }
+
+            @Override
+            public void onCancel() {
+
+            }
+        });
+
+        updateCoords();
     }
 
     @Override
@@ -349,6 +367,5 @@ public class MainActivity extends ActionBarActivity implements
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
-
     }
 }
