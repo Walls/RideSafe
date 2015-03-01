@@ -1,47 +1,54 @@
 package systems.modev.ridesafe;
 
-import android.app.Activity;
-import android.content.Context;
-import android.location.Criteria;
-import android.location.Location;
 import android.location.Location;
 import android.location.LocationListener;
-import android.location.LocationListener;
-import android.location.LocationManager;
-import android.os.Bundle;
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
-import android.widget.TextView;
-import android.widget.Toast;
 
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.GoogleMap;
-import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 
+import android.util.Log;
 
 
-public class MapsActivity extends FragmentActivity implements LocationListener, OnMapReadyCallback {
+public class MapsActivity extends FragmentActivity implements LocationListener, GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener {
 
-    private GoogleMap mMap; // Might be null if Google Play services APK is not available.
-    private TextView latituteField;
-    private TextView longitudeField;
-    private LocationManager locationManager;
-    private String provider;
+    private GoogleMap mMap; // Might be null if Google Play services APK is not available
+    private double latitude;
+    private double longitude;
+    Location mLastLocation;
+    private GoogleApiClient mGoogleApiClient;
 
     /** Called when the activity is first created. */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_maps);
+        buildGoogleApiClient();
         setUpMapIfNeeded();
+    }
+
+    protected synchronized void buildGoogleApiClient() {
+        mGoogleApiClient = new GoogleApiClient.Builder(this)
+                .addConnectionCallbacks(this)
+                .addOnConnectionFailedListener(this)
+                .addApi(LocationServices.API)
+                .build();
     }
 
     @Override
     protected void onResume() {
         super.onResume();
         setUpMapIfNeeded();
+    }
+
+    protected void onDestroy() {
+        mMap.clear();
     }
 
     /**
@@ -69,7 +76,6 @@ public class MapsActivity extends FragmentActivity implements LocationListener, 
             // Check if we were successful in obtaining the map.
             if (mMap != null) {
 
-
                 mMap.setOnMyLocationChangeListener(new GoogleMap.OnMyLocationChangeListener() {
 
                     @Override
@@ -84,38 +90,48 @@ public class MapsActivity extends FragmentActivity implements LocationListener, 
         }
     }
 
-    /**
-     * This is where we can add markers or lines, add listeners or move the camera. In this case, we
-     * just add a marker near Africa.
-     * <p/>
-     * This should only be called once and when we are sure that {@link #mMap} is not null.
-     */
-    private void setUpMap() {
-        // mMap.addMarker(new MarkerOptions().position(new LatLng(0, 0)).title("Marker"));
-    }
-
     @Override
     public void onLocationChanged(Location location) {
+        mLastLocation = LocationServices.FusedLocationApi.getLastLocation(mGoogleApiClient);
 
-    }
-
-    @Override
-    public void onStatusChanged(String provider, int status, Bundle extras) {
-
-    }
-
-    @Override
-    public void onProviderEnabled(String provider) {
-
+        if(mLastLocation != null){
+            latitude = mLastLocation.getLatitude();
+            longitude = mLastLocation.getLongitude();
+            mMap.addMarker(new MarkerOptions().position(new LatLng(mLastLocation.getLatitude(), mLastLocation.getLongitude())).title("It's Me!"));
+        }
     }
 
     @Override
     public void onProviderDisabled(String provider) {
+    }
+
+    @Override
+    public void onProviderEnabled(String provider) {
+    }
+
+    @Override
+    public void onStatusChanged(String provider, int status, Bundle extras) {
+    }
+
+    @Override
+    public void onConnected(Bundle bundle) {
+        mLastLocation = LocationServices.FusedLocationApi.getLastLocation(mGoogleApiClient);
+
+        if(mLastLocation != null){
+            latitude = mLastLocation.getLatitude();
+            longitude = mLastLocation.getLongitude();
+            mMap.addMarker(new MarkerOptions().position(new LatLng(mLastLocation.getLatitude(), mLastLocation.getLongitude())).title("It's Me!"));
+        }
+    }
+
+    @Override
+    public void onConnectionSuspended(int i) {
 
     }
 
     @Override
-    public void onMapReady(GoogleMap googleMap) {
+    public void onConnectionFailed(ConnectionResult connectionResult) {
 
     }
 }
+
