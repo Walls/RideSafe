@@ -2,4 +2,7 @@
     <string name="app_name">RideSafe</string>
     <string name="title_activity_maps">RideSafe</string>
     <string name="google_maps_key">AIzaSyDSOi6dAW048ak0fgaAnHfr0fKFSGlPurY</string>
+    <string name="toggle_button">Toggle Tracking</string>
+    <string name="start_updates">Updates Started!</string>
+    <string name="stop_updates">Updates Stopped!</string>
 </resources>
