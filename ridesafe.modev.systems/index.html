@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style type="text/css">
+      html, body, #map-canvas { height: 100%; margin: 0; padding: 0;}
+    </style>
+<!--<script src="https://cdn.firebase.com/js/client/2.2.1/firebase.js"></script>-->
+    <script src= "http://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
+    <script src= "https://cdn.firebase.com/js/client/2.2.1/firebase.js"></script>
+    <script src= "https://maps.googleapis.com/maps/api/js?key=AIzaSyDoLIxoFRW2OjEWbz5U5XHHjEEbIeLcU0g"></script>
+    <h1>SPLASH</h1>
+    <script type= "text/javascript">
+        
+        
+        $(document).ready(function(){
+            // Get a reference to our posts
+                var ref = new Firebase("https://dazzling-torch-5228.firebaseio.com");
+                
+            
+                //GOOGLE MAP
+                function initialize() {
+                
+                var myLatlng = null;
+                    var prevLatlng = null;
+    
+                var map = new google.maps.Map(document.getElementById('map-canvas'), {center: myLatlng, zoom: 18});
+                    
+                ref.on("child_added", function(snapshot) {
+                  var gpsCord = snapshot.val();
+                    
+                    //create Latlng maps var using gpsCord String
+                    var resStr = gpsCord.split(" ")
+                    var lat=Number(resStr[0]);
+                    var lng=Number(resStr[1]);
+                    console.log(lat);
+                    console.log(lng);
+                    
+                    prevLatlng = myLatlng;
+                    myLatlng = new google.maps.LatLng(lat,lng);
+                    
+                    // Add Marker Update Map
+                    if(prevLatlng!=null&&myLatlng!=null){
+                        var flightPath = new google.maps.Polyline({
+                        path: [prevLatlng,myLatlng],
+                        geodesic: true,
+                        strokeColor: '#003366',
+                        strokeOpacity: 1.0,
+                        strokeWeight: 2
+                      });
+
+                        flightPath.setMap(map);
+                        map.setCenter(myLatlng);
+                    }
+                    
+                });
+                
+                
+                }
+            
+                google.maps.event.addDomListener(window, 'load', initialize);
+                
+        });
+       
+        </script>
+    </head>
+    <body id="map-canvas">
+        <p>
+        </p>
+    </body>
+</html>
