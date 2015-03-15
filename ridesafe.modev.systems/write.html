@@ -7,21 +7,18 @@
         
         $(document).ready(function(){
         
-//            var ref = new Firebase("https://dazzling-torch-5228.firebaseio.com/?check");
-//            
-//            var usersRef = ref.child("users");
-//            ref.set({
-//              alanisawesome: {
-//                date_of_birth: "June 23, 1912",
-//                full_name: "Alan Turing"
-//              },
-//              gracehop: {
-//                date_of_birth: "December 9, 1906",
-//                full_name: "Grace Hopper"
-//              }
-//            });
-                
+            var ref1 = new Firebase("https://dazzling-torch-5228.firebaseio.com/demo");
+            var ref2 = new Firebase("https://dazzling-torch-5228.firebaseio.com/");
+              
+            ref2.on("child_added", function(snapshot) {
+                ref1.push(snapshot.val());
+
+            });
+            
         });
+        
+        
+        
        
     </script>
     </head>

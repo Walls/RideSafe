@@ -1,14 +1,173 @@
-html, body, #map-canvas, #splash { 
+html, body, #error, #map-canvas{ 
     width:100%; 
     height: 100%; 
     margin: 0; 
     padding: 0;
 }
-#splash{ 
-    width:100%; 
-    height: 100%; 
+
+/*Error page default set to do not load   
+    color: #3f3f3f;   */
+#error{
+    color: #000;
+    font-family: 'Bree Serif', sans-serif;
+    font-size: 20px;
+    display: none;
+}
+#error > #img-wrapper{
+    background-color: #555555   ; 
+     -webkit-box-shadow: inset 0 0 100px rgba(0,0,0,.5);
+    width: 100%;
+    height:160px;
+    border-bottom-left-radius: 20%;
+    border-bottom-right-radius: 20%;
+}
+
+#error > #img-wrapper > #img {
     position: absolute;
     top: 0;
+    left: 5%;
+    height:160px; 
+    width:  auto;
+}
+
+#error > #text > h1{
+    color: #1D5A7F;
+}
+
+#error > #text{
+    margin-left: 3%;
+    margin-right: 3%;
+    float: left;
+    width: 50%;
+}
+#error > #text > p {
+    margin-left: 1em;
+}
+
+#error > #text > p > #social-img{
+    padding-top: 20px;
+    width:100px;
+    
+}
+
+#error > #car-logo{
+    padding-top: 3%;
+    margin-left: 3%;
+    margin-right: 3em;
+    float: right;
+    width: 30%;
+}
+#error > #car-logo > #img {
+    width: 100%;
+}
+
+
+
+#error > #footer {
+    text-align: center;
+    padding-bottom: 1em;
+    font-size:14px;
+    font-family: fantasy;
+    color: #999;/* IE8 proofing */
+    color: rgba(0,0,0,.8);
+    width:100%;
+    position: fixed;
+    bottom: 0;   
+}
+
+
+/*
+ *  Loading Screen populationa and animation
+ */
+#splash-wrapper {
+    position: fixed;
+    top: 0;
     left: 0;
-    background: #ffffff;
+    width: 100%;
+    height: 100%;
+    z-index: 1000;
+    background-color: #555555;
+}
+
+#img {
+    width: 100%;
+    height: 20%;
+}
+#img > #logo{
+    display:block;  
+    margin-left: auto;
+    margin-right: auto;
+    max-width: 90%;
+    
+}
+
+/*
+ *  .fadeout class added, now we need to fade
+ */
+
+.fadeout #splash-wrapper{
+    visibility: hidden;
+    opacity: 0;
+    -webkit-transition: all 1s ease-out; 
+            transition: all 1s ease-out;
+}
+
+/*
+ *  middle spinning circle
+ */
+
+#splash {
+    display: block;
+    position: relative;
+    left: 50%;
+    top: 50%;
+    width: 150px;
+    height: 150px;
+    margin: -75px 0 0 -75px;
+    
+    border-radius: 50%;
+    border: 5px solid;
+    border-top-color: #3498DB;
+    border-right-color: #fff;
+    border-bottom-color: #3498DB;
+    border-left-color: #fff;
+    
+    -webkit-animation: spin 1.5s linear infinite;
+    animation: spin 1.5s linear infinite;
+}
+
+/* make them spin!*/
+@-webkit-keyframes spin {
+    0%   {
+        -webkit-transform: rotate(0deg);  /* Chrome, Opera 15+, Safari 3.1+ */
+        -ms-transform: rotate(0deg);  /* IE 9 */
+        transform: rotate(0deg);  /* Firefox 16+, IE 10+, Opera */
+    }
+    100% {
+        -webkit-transform: rotate(360deg);  /* Chrome, Opera 15+, Safari 3.1+ */
+        -ms-transform: rotate(360deg);  /* IE 9 */
+        transform: rotate(360deg);  /* Firefox 16+, IE 10+, Opera */
+    }
+}
+@keyframes spin {
+    0%   {
+        -webkit-transform: rotate(0deg);  /* Chrome, Opera 15+, Safari 3.1+ */
+        -ms-transform: rotate(0deg);  /* IE 9 */
+        transform: rotate(0deg);  /* Firefox 16+, IE 10+, Opera */
+    }
+    100% {
+        -webkit-transform: rotate(360deg);  /* Chrome, Opera 15+, Safari 3.1+ */
+        -ms-transform: rotate(360deg);  /* IE 9 */
+        transform: rotate(360deg);  /* Firefox 16+, IE 10+, Opera */
+    }
+}
+
+@media (max-width: 992px) {
+    #error > #car-logo {
+    display: none;
+  }
+    #error > #text{
+        text-align: center;
+        width:94%;
+    }
 }

@@ -1,70 +1,39 @@
 <!DOCTYPE html>
 <html>
 <head>
+    <meta name=viewport content="width=device-width, initial-scale=1">
+    <title>RideSafe, Mapping Interface  - by MoDev Systems</title>
+    
+    <link href='http://fonts.googleapis.com/css?family=Bree+Serif:400italics' rel='stylesheet' type='text/css'>
     <link rel="shortcut icon" type="image/ico" href="http://modev.systems/favicon.ico"/>
     <link rel="stylesheet" href="stylesheet.css">
     
     <script src= "http://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
     <script src= "https://cdn.firebase.com/js/client/2.2.1/firebase.js"></script>
     <script src= "https://maps.googleapis.com/maps/api/js?key=AIzaSyDoLIxoFRW2OjEWbz5U5XHHjEEbIeLcU0g"></script>
-    
-    <script type= "text/javascript">
-        
-        
-        $(document).ready(function(){
-            
-            function initialize(){
-                
-                // Get a reference to our posts
-                var ref = new Firebase("https://dazzling-torch-5228.firebaseio.com");
-                
-                var myLatlng = null;
-                var prevLatlng = null;
-    
-                var map = new google.maps.Map(document.getElementById('map-canvas'), {center: myLatlng, zoom: 18});
-                    
-                    ref.on("child_added", function(snapshot) {
-                  var gpsCord = snapshot.val();
-                    
-                    //create Latlng maps var using gpsCord String
-                    var resStr = gpsCord.split(" ")
-                    var lat=Number(resStr[0]);
-                    var lng=Number(resStr[1]);
-                    console.log(lat);
-                    console.log(lng);
-                    
-                    prevLatlng = myLatlng;
-                    myLatlng = new google.maps.LatLng(lat,lng);
-                    
-                    // Add Marker Update Map
-                    if(prevLatlng!=null&&myLatlng!=null){
-                        var flightPath = new google.maps.Polyline({
-                        path: [prevLatlng,myLatlng],
-                        geodesic: true,
-                        strokeColor: '#003366',
-                        strokeOpacity: 1.0,
-                        strokeWeight: 2
-                      });
-
-                        flightPath.setMap(map);
-                        map.setCenter(myLatlng);
-                        
-                    }
-                    
-                });
-                
-            }
-            
-             google.maps.event.addDomListener(window, 'load', initialize()  );
-  
-        });
+    <script src="mapinterface.js"></script>
        
-        </script>
     </head>
     <body>
-        <div id="splash">
+        <div id="splash-wrapper">
+            <div id="img"><img id="logo"src="ridesafelogo.png"></div>
+            <div id="splash"></div>
         </div>
         <div id="map-canvas">
+        </div>
+        <div id ="error">
+            <div id="img-wrapper"><img id="img" src="ridesafelogo.png"></div>
+            <div id ="text">
+                <h1>Oh no! You shouldn't be here!</h1>
+                <p>You seem to have entered an invalid URL.</p>
+                <h3>What can you do?</h3>
+                <p>Make sure you entered in the URL from your contact correctly.</p>
+                <p>Alternatively, if your contact arrived safely, their location data is unretrievable.</p>
+                <p><img id="social-img" src ="favicon.ico"></p>
+            </div>
+            <div id ="car-logo"><img id="img" src="applogo.png"></div>
+            
+            <div id = "footer">Copyright RideSafe by MoDev Systems</div>
         </div>
     </body>
 </html>
