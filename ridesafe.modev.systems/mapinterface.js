@@ -1,15 +1,15 @@
 $(document).ready(function(){
         function goToError(){
-            var errorId = document.getElementById("error");
-            errorId.style.display = "block";
-
-            var mapId = document.getElementById("map-canvas");
-            mapId.style.display = "none";
             
             setTimeout(function(){
                 $('body').addClass('fadeout');
             }, 3000);
             
+            var errorId = document.getElementById("error");
+            errorId.style.display = "block";
+
+            var mapId = document.getElementById("map-canvas");
+            mapId.style.display = "none";   
             
         }
         var queryString = window.location.search;
