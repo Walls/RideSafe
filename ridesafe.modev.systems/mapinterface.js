@@ -9,7 +9,7 @@ $(document).ready(function(){
             setTimeout(function(){
                 $('body').addClass('fadeout');
             }, 3000);
-            return;
+            
             
         }
         var queryString = window.location.search;
@@ -41,13 +41,10 @@ $(document).ready(function(){
 
             ref.on("child_added", function(snapshot) {
             var gpsCord = snapshot.val();
-            console.log(gpsCord);
             //create Latlng maps var using gpsCord String
             var resStr = gpsCord.split(" ");
             var lat=Number(resStr[0]);
             var lng=Number(resStr[1]);
-            console.log(lat);
-            console.log(lng);
 
             //connect the dots
             prevLatlng = myLatlng;
