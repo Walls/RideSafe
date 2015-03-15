@@ -1,20 +1,24 @@
-html, body, #error, #map-canvas{ 
+html, body, #map-canvas{ 
     width:100%; 
     height: 100%; 
     margin: 0; 
     padding: 0;
 }
 
-/*Error page default set to do not load   
-    color: #3f3f3f;   */
+/*Error page default set to do not load  */
 #error{
+    display: block;
+    height: 100%;
+    margin-left: auto;
+    margin-right: auto;
+    max-width: 1300px;
     color: #000;
     font-family: 'Bree Serif', serif;
     font-size: 20px;
     display: none;
 }
 #error > #img-wrapper{
-    background-color: #555555   ; 
+    background-color: #3498DB   ; 
      -webkit-box-shadow: inset 0 0 100px rgba(0,0,0,.5);
     width: 100%;
     height:120px;
@@ -23,22 +27,20 @@ html, body, #error, #map-canvas{
 }
 
 #error > #img-wrapper > #img {
-    position: absolute;
+    padding-left: 1em;
+    position: relative;
     top: 0;
-    left: 5%;
-    height:120px; 
-    width:  auto;
+    height: 120px; 
+    width: auto;
 }
-
-#error > #text > h1{
-    color: #1D5A7F;
-}
-
 #error > #text{
     margin-left: 3%;
     margin-right: 3%;
     float: left;
     width: 50%;
+}
+#error > #text > h1{
+    color: #1D5A7F;
 }
 #error > #text > p {
     margin-left: 1em;
@@ -51,7 +53,7 @@ html, body, #error, #map-canvas{
 }
 
 #error > #app-logo{
-    padding-top: 3%;
+   padding-top: 3%;
     margin-left: 3%;
     margin-right: 3em;
     float: right;
@@ -61,34 +63,31 @@ html, body, #error, #map-canvas{
     width: 100%;
 }
 
-
-
 #error > #footer {
+    float:left;
+    padding:15px 0;
+    min-width:100%;
+    width:100%;
+    position: relative;
+    left:0;
+    bottom:0;
+}
+
+#error > #footer > p {
+    
     text-align: center;
-    padding-bottom: 1em;
     font-size:14px;
     font-family: fantasy;
     color: #999;/* IE8 proofing */
     color: rgba(0,0,0,.8);
-    width:100%;
-    position: fixed;
-    bottom: 0;   
+    padding-bottom: 1em; 
 }
 
 
 /*
  *  Loading Screen populationa and animation
  */
-#splash-wrapper {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    z-index: 1000;
-    background-color: #333333;
-     -webkit-box-shadow: inset 0 0 100px rgba(0,0,0,.5);
-}
+
 
 #img {
     width: 100%;
@@ -107,16 +106,29 @@ html, body, #error, #map-canvas{
  */
 
 .fadeout #splash-wrapper{
-    visibility: none;
+    visibility: collapse;
+    
     opacity: 0;
     -webkit-transition: all 1s ease-out; 
             transition: all 1s ease-out;    
 }
 
+#splash-wrapper {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1000;
+    background-color: #3498DB;
+     -webkit-box-shadow: inset 0 0 100px rgba(0,0,0,.5);
+}
 /*
  *  middle spinning circle
- */
 
+
+     -webkit-box-shadow: inset 0 0 100px rgba(0,0,0,.5);
+ */
 #splash {
     display: block;
     position: relative;
@@ -125,16 +137,31 @@ html, body, #error, #map-canvas{
     width: 150px;
     height: 150px;
     margin: -75px 0 0 -75px;
+    z-index: 1001;  
     
-    border-radius: 100%;
-    border: 10px solid;
-    border-top-color: #fff;
-    border-right-color: #3498DB;
-    border-bottom-color: #3498DB;
-    border-left-color: #3498DB;
+    border-radius: 50%;
+    border: 10px solid #fff;
+    border-top-color: transparent;
+    
     
     -webkit-animation: spin 1.5s linear infinite;
     animation: spin 1.5s linear infinite;
+}
+
+#splash:before {
+    content:"";
+    position: absolute;
+    top: 5px;
+    left: 5px;
+    right: 5px;
+    bottom: 5px;
+    
+    border-radius: 100%;
+    border: 10px dotted transparent;
+    border-top-color: #000;
+    
+    -webkit-animation: spin 3s linear infinite;
+    animation: spin 3s linear infinite;
 }
 
 /* make them spin!*/
@@ -164,11 +191,14 @@ html, body, #error, #map-canvas{
 }
 
 @media (max-width: 768px) {
+    
     #error > #img-wrapper > #img {
-    display: block;
+    padding:0;
+    display:block;
     margin-left:auto;
     margin-right:auto;
-    width:90%;
+    width: 330px;
+    max-width: 100%;
     height: auto;
     }
 }
