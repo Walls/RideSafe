@@ -158,7 +158,7 @@ html, body, #map-canvas{
     
     border-radius: 100%;
     border: 10px dotted transparent;
-    border-top-color: #000;
+    border-top-color: #fff;
     
     -webkit-animation: spin 3s linear infinite;
     animation: spin 3s linear infinite;
