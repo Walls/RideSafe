@@ -144,8 +144,8 @@ html, body, #map-canvas{
     border-top-color: transparent;
     
     
-    -webkit-animation: spin 1.5s linear infinite;
-    animation: spin 1.5s linear infinite;
+    -webkit-animation: spin1 3s linear infinite;
+    animation: spin1 3s linear infinite;
 }
 
 #splash:before {
@@ -160,12 +160,37 @@ html, body, #map-canvas{
     border: 10px dotted transparent;
     border-top-color: #fff;
     
-    -webkit-animation: spin 3s linear infinite;
-    animation: spin 3s linear infinite;
+    -webkit-animation: spin2 1s linear infinite;
+    animation: spin2 1s linear infinite;
 }
 
 /* make them spin!*/
-@-webkit-keyframes spin {
+@-webkit-keyframes spin1 {
+    0%   {
+        -webkit-transform: rotate(360deg);  /* Chrome, Opera 15+, Safari 3.1+ */
+        -ms-transform: rotate(360deg);  /* IE 9 */
+        transform: rotate(360deg);  /* Firefox 16+, IE 10+, Opera */
+    }
+    100% {
+        -webkit-transform: rotate(0deg);  /* Chrome, Opera 15+, Safari 3.1+ */
+        -ms-transform: rotate(0deg);  /* IE 9 */
+        transform: rotate(0deg);  /* Firefox 16+, IE 10+, Opera */
+    }
+}
+@keyframes spin1 {
+    0%   {
+        -webkit-transform: rotate(360deg);  /* Chrome, Opera 15+, Safari 3.1+ */
+        -ms-transform: rotate(360deg);  /* IE 9 */
+        transform: rotate(360deg);  /* Firefox 16+, IE 10+, Opera */
+    }
+    100% {
+        -webkit-transform: rotate(0deg);  /* Chrome, Opera 15+, Safari 3.1+ */
+        -ms-transform: rotate(0deg);  /* IE 9 */
+        transform: rotate(0deg);  /* Firefox 16+, IE 10+, Opera */
+    }
+}
+
+@-webkit-keyframes spin2 {
     0%   {
         -webkit-transform: rotate(0deg);  /* Chrome, Opera 15+, Safari 3.1+ */
         -ms-transform: rotate(0deg);  /* IE 9 */
@@ -177,7 +202,7 @@ html, body, #map-canvas{
         transform: rotate(360deg);  /* Firefox 16+, IE 10+, Opera */
     }
 }
-@keyframes spin {
+@keyframes spin2 {
     0%   {
         -webkit-transform: rotate(0deg);  /* Chrome, Opera 15+, Safari 3.1+ */
         -ms-transform: rotate(0deg);  /* IE 9 */
