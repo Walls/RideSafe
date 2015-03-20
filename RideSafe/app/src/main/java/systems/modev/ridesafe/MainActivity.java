@@ -32,6 +32,8 @@ import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.view.Window;
+import android.view.WindowManager;
 import android.widget.CompoundButton;
 import android.telephony.SmsManager;
 import android.widget.ImageView;
@@ -106,7 +108,7 @@ public class MainActivity extends ActionBarActivity implements
      */
     protected Location mCurrentLocation;
 
-    protected String link, baseLink;
+    protected String link;
     private int pauseCount;
 
     // UI Widgets.
@@ -177,8 +179,6 @@ public class MainActivity extends ActionBarActivity implements
                         mToggleButton.setBackground(getResources().getDrawable(R.drawable.endtrackingbuttonsmall));
 
                         if (pauseCount >= 1) { // create a new child in the table each time the user starts tracking
-                            // link = baseLink + String.valueOf(pauseCount);
-                            // firebase = firebase.getRoot().child(link.split("\\?")[1]);
                             firebase.unauth();
                             firebase = new Firebase("https://ridesafe.firebaseio.com");
                             authenticateFirebase();
@@ -211,8 +211,7 @@ public class MainActivity extends ActionBarActivity implements
         });
 
 
-
-
+        // Style action bar
         ActionBar actionBar = getSupportActionBar();
         actionBar.setBackgroundDrawable(new ColorDrawable(Color.rgb(0, 209, 202)));
         actionBar.setDisplayOptions(actionBar.getDisplayOptions() | ActionBar.DISPLAY_SHOW_CUSTOM);
@@ -226,6 +225,12 @@ public class MainActivity extends ActionBarActivity implements
         actionBar.setTitle("");
 
 
+        // Style status bar
+        Window window = this.getWindow();
+        window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
+        window.clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
+        window.setStatusBarColor(Color.parseColor("#008783"));
+
         firebase = new Firebase("https://ridesafe.firebaseio.com");
         authenticateFirebase();
     }
@@ -237,7 +242,7 @@ public class MainActivity extends ActionBarActivity implements
                 // we've authenticated this session with Firebase
                 // authData object contains getter methods
                 firebase = firebase.child(authData.getUid().split("-")[1]);
-                baseLink = link = "http://ridesafe.modev.systems/?" + authData.getUid().split("-")[1];
+                link = "http://ridesafe.modev.systems/?" + authData.getUid().split("-")[1];
             }
 
             public void onAuthenticationError(FirebaseError firebaseError) {
@@ -454,9 +459,9 @@ public class MainActivity extends ActionBarActivity implements
     @Override
     protected void onStop() {
         super.onStop();
-        if (mGoogleApiClient.isConnected()) {
+        /*if (mGoogleApiClient.isConnected()) {
             mGoogleApiClient.disconnect();
-        }
+        }*/
     }
 
     /**

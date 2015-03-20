@@ -13,6 +13,7 @@
 
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
+    android:fitsSystemWindows="true"
     android:layout_height="match_parent">
 
     <fragment
@@ -25,7 +26,7 @@
     <ToggleButton
         android:id="@+id/toggle_updates"
         android:layout_width="fill_parent"
-        android:layout_height="248px"
+        android:layout_height="75dp"
         android:layout_alignParentBottom="true"
         android:layout_alignParentEnd="true"
         android:textOff=""
