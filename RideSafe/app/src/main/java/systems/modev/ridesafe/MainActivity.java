@@ -32,11 +32,8 @@ import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
-import android.view.View;
-import android.view.ViewGroup;
 import android.widget.CompoundButton;
 import android.telephony.SmsManager;
-import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.Toast;
 import android.widget.ToggleButton;
@@ -109,7 +106,7 @@ public class MainActivity extends ActionBarActivity implements
      */
     protected Location mCurrentLocation;
 
-    protected String link;
+    protected String link, baseLink;
     private int pauseCount;
 
     // UI Widgets.
@@ -173,26 +170,40 @@ public class MainActivity extends ActionBarActivity implements
 
                 try {
                     if (isChecked) { // if the user just enabled updates
-                        //authenticateFirebase();
+                        if (phoneNumber == null || phoneNumber.length() < 9)
+                            throw new IllegalArgumentException();
+
                         startLocationUpdates();
                         mToggleButton.setBackground(getResources().getDrawable(R.drawable.endtrackingbuttonsmall));
 
-                        if(phoneNumber == null) {
-                            Toast.makeText(getApplicationContext(), String.format("Please enter a trusted phone number (using the button in the top right) before" +
-                                    " tracking."), Toast.LENGTH_SHORT).show();
+                        if (pauseCount >= 1) { // create a new child in the table each time the user starts tracking
+                            // link = baseLink + String.valueOf(pauseCount);
+                            // firebase = firebase.getRoot().child(link.split("\\?")[1]);
+                            firebase.unauth();
+                            firebase = new Firebase("https://ridesafe.firebaseio.com");
+                            authenticateFirebase();
                         }
 
                         SmsManager.getDefault().sendTextMessage(phoneNumber, null, "I pressed the TRACK button in RideSafe! " +
-                                String.format("Please track me at: %s", link), null, null);
+                            String.format("Please track me at: %s", link), null, null);
 
-                    } else { // if the user just disabled updates
+
+                    }
+                    else { // if the user just disabled updates
+                        pauseCount++;
                         stopLocationUpdates();
                         mToggleButton.setBackground(getResources().getDrawable(R.drawable.begintrackingbuttonsmall));
                         SmsManager.getDefault().sendTextMessage(phoneNumber, null, "I pressed the STOP TRACKING button in RideSafe! "
                                 + "Thanks for watching out for me!", null, null);
                     }
                 } catch (java.lang.IllegalArgumentException e) {
-                    Toast.makeText(getApplicationContext(), String.format("There was a problem. Please re-enter your safe contact number."), Toast.LENGTH_SHORT).show();
+                    if(phoneNumber == null) {
+                        Toast.makeText(getApplicationContext(), String.format("Please enter a trusted phone number (using the button in the top right) before" +
+                                " tracking."), Toast.LENGTH_SHORT).show();
+                    }
+                    else
+                        Toast.makeText(getApplicationContext(), String.format("There was a problem. Please re-enter your safe contact number using" +
+                                " the button in the top right."), Toast.LENGTH_SHORT).show();
 
                 }
 
@@ -226,7 +237,7 @@ public class MainActivity extends ActionBarActivity implements
                 // we've authenticated this session with Firebase
                 // authData object contains getter methods
                 firebase = firebase.child(authData.getUid().split("-")[1]);
-                link = "http://ridesafe.modev.systems/?" + authData.getUid().split("-")[1];
+                baseLink = link = "http://ridesafe.modev.systems/?" + authData.getUid().split("-")[1];
             }
 
             public void onAuthenticationError(FirebaseError firebaseError) {
@@ -422,7 +433,6 @@ public class MainActivity extends ActionBarActivity implements
     protected void stopLocationUpdates() {
         LocationServices.FusedLocationApi.removeLocationUpdates(mGoogleApiClient, this);
         mMap.clear();
-        pauseCount++;
     }
 
     @Override
@@ -444,9 +454,9 @@ public class MainActivity extends ActionBarActivity implements
     @Override
     protected void onStop() {
         super.onStop();
-        /*if (mGoogleApiClient.isConnected()) {
+        if (mGoogleApiClient.isConnected()) {
             mGoogleApiClient.disconnect();
-        }*/
+        }
     }
 
     /**
