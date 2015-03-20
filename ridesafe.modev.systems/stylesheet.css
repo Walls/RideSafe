@@ -48,7 +48,7 @@ html, body, #map-canvas{
 #error > #text > p > a >#social-img{
     padding-top: 20px;
     padding-right: 10px;
-    width:100px;
+    height:80px;
     
 }
 
