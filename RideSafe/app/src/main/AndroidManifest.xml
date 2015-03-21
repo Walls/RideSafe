@@ -28,7 +28,7 @@
             android:name="com.google.android.maps.v2.API_KEY"
             android:value="@string/debug_maps_key" /> -->
 
-        <gmeta-data
+        <meta-data
             android:name="com.google.android.maps.v2.API_KEY"
             android:value="AIzaSyBO4Imz5B9JVRfD6oTs1zixu71ghA2C1Qs" />
 
