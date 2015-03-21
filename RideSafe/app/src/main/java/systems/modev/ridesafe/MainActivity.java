@@ -225,11 +225,17 @@ public class MainActivity extends ActionBarActivity implements
         actionBar.setTitle("");
 
 
-        // Style status bar
-        Window window = this.getWindow();
-        window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
-        window.clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
-        window.setStatusBarColor(Color.parseColor("#008783"));
+        // Style status bar (only for Lollipop+ devices)
+        try {
+            Window window = this.getWindow();
+            window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
+            window.clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
+            window.setStatusBarColor(Color.parseColor("#008783"));
+        }
+
+        catch (NoSuchMethodError e) {
+            e.printStackTrace();
+        }
 
         /*firebase = new Firebase("https://ridesafe.firebaseio.com");
         authenticateFirebase();*/
