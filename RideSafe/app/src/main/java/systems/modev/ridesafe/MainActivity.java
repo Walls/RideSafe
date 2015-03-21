@@ -19,15 +19,16 @@ package systems.modev.ridesafe;
 import com.firebase.client.AuthData;
 import com.firebase.client.Firebase;
 
+import android.annotation.TargetApi;
 import android.content.Context;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.location.Location;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Vibrator;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.ActionBarActivity;
-import android.telephony.PhoneNumberUtils;
 import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -109,7 +110,6 @@ public class MainActivity extends ActionBarActivity implements
     protected Location mCurrentLocation;
 
     protected String link;
-    private int pauseCount;
 
     // UI Widgets.
     protected ToggleButton mToggleButton;
@@ -131,10 +131,12 @@ public class MainActivity extends ActionBarActivity implements
      * Time when the location was updated represented as a String.
      */
     protected String mLastUpdateTime;
+    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         Firebase.setAndroidContext(this);
+        firebase = new Firebase("https://ridesafe.firebaseio.com");
 
         // Kick off the process of building a GoogleApiClient and requesting the LocationServices
         // API.
@@ -142,8 +144,6 @@ public class MainActivity extends ActionBarActivity implements
 
         // Update values using data stored in the Bundle.
         updateValuesFromBundle(savedInstanceState);
-
-        pauseCount = 0;
 
         try {
             phoneNumber = read("number.txt", getApplicationContext());
@@ -172,31 +172,31 @@ public class MainActivity extends ActionBarActivity implements
 
                 try {
                     if (isChecked) { // if the user just enabled updates
-                        if (phoneNumber == null || phoneNumber.length() < 9)
+                        if (phoneNumber == null || phoneNumber.equals("") || phoneNumber.length() < 9 || phoneNumber.length() > 15)
                             throw new IllegalArgumentException();
 
-                        startLocationUpdates();
-                        mToggleButton.setBackground(getResources().getDrawable(R.drawable.endtrackingbuttonsmall));
+                        else {
+                            startLocationUpdates();
+                            mToggleButton.setBackground(getResources().getDrawable(R.drawable.endtrackingbuttonsmall));
 
-                        if (pauseCount >= 1) { // create a new child in the table each time the user starts tracking
-                            firebase.unauth();
+                            // create a new child in the table each time the user starts tracking
                             firebase = new Firebase("https://ridesafe.firebaseio.com");
                             authenticateFirebase();
+
+
                         }
-
-                        SmsManager.getDefault().sendTextMessage(phoneNumber, null, "I pressed the TRACK button in RideSafe! " +
-                            String.format("Please track me at: %s", link), null, null);
-
-
                     }
+
                     else { // if the user just disabled updates
-                        pauseCount++;
-                        stopLocationUpdates();
-                        mToggleButton.setBackground(getResources().getDrawable(R.drawable.begintrackingbuttonsmall));
                         SmsManager.getDefault().sendTextMessage(phoneNumber, null, "I pressed the STOP TRACKING button in RideSafe! "
                                 + "Thanks for watching out for me!", null, null);
+                        stopLocationUpdates();
+                        mToggleButton.setBackground(getResources().getDrawable(R.drawable.begintrackingbuttonsmall));
+
                     }
-                } catch (java.lang.IllegalArgumentException e) {
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    mToggleButton.setChecked(false); // prevent button from toggling when no phone # is not known
                     if(phoneNumber == null) {
                         Toast.makeText(getApplicationContext(), String.format("Please enter a trusted phone number (using the button in the top right) before" +
                                 " tracking."), Toast.LENGTH_SHORT).show();
@@ -231,8 +231,8 @@ public class MainActivity extends ActionBarActivity implements
         window.clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
         window.setStatusBarColor(Color.parseColor("#008783"));
 
-        firebase = new Firebase("https://ridesafe.firebaseio.com");
-        authenticateFirebase();
+        /*firebase = new Firebase("https://ridesafe.firebaseio.com");
+        authenticateFirebase();*/
     }
 
     protected void authenticateFirebase() {
@@ -241,8 +241,11 @@ public class MainActivity extends ActionBarActivity implements
             public void onAuthenticated(AuthData authData) {
                 // we've authenticated this session with Firebase
                 // authData object contains getter methods
-                firebase = firebase.child(authData.getUid().split("-")[1]);
-                link = "http://ridesafe.modev.systems/?" + authData.getUid().split("-")[1];
+                String extension = authData.getUid().split("-")[1];
+                firebase = firebase.child(extension);
+                link = "http://ridesafe.modev.systems/?" + extension;
+                SmsManager.getDefault().sendTextMessage(phoneNumber, null, "I pressed the TRACK button in RideSafe! " +
+                        String.format("Please track me at: %s", link), null, null);
             }
 
             public void onAuthenticationError(FirebaseError firebaseError) {
@@ -270,14 +273,16 @@ public class MainActivity extends ActionBarActivity implements
                         @Override
                         public boolean onOkClicked(String input) {
                             try {
-                                if (!PhoneNumberUtils.isGlobalPhoneNumber(input) || input.length() < 9)
+                                if (input == null || input.equals("") || input.length() < 9 || input.length() > 15)
                                     throw new IllegalArgumentException();
 
-                                write("number.txt", getBaseContext(), input);
-                                phoneNumber = input;
-                                SmsManager.getDefault().sendTextMessage(phoneNumber, null, "I just set you as my trusted contact in RideSafe. "
-                                        + "Ask me about it!", null, null);
-                                Toast.makeText(getApplicationContext(), String.format("%s successfully registered as trusted contact!", phoneNumber), Toast.LENGTH_SHORT).show();
+                                else {
+                                    write("number.txt", getBaseContext(), input);
+                                    phoneNumber = input;
+                                    SmsManager.getDefault().sendTextMessage(phoneNumber, null, "I just set you as my trusted contact in RideSafe. "
+                                            + "Ask me about it!", null, null);
+                                    Toast.makeText(getApplicationContext(), String.format("%s successfully registered as trusted contact!", phoneNumber), Toast.LENGTH_SHORT).show();
+                                }
                             }
 
                             catch (Exception e) {
@@ -302,6 +307,7 @@ public class MainActivity extends ActionBarActivity implements
                 }
 
                 catch (Exception e){  // file is malformed
+                    e.printStackTrace();
                     if(phoneNumber == null) {
                         Toast.makeText(getApplicationContext(), String.format("Please enter a trusted phone number (using the button in the top right) before" +
                                 " tracking."), Toast.LENGTH_SHORT).show();
@@ -329,9 +335,6 @@ public class MainActivity extends ActionBarActivity implements
             // Try to obtain the map from the SupportMapFragment.
             mMap = ((SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map)).getMap();
             mMap.setMyLocationEnabled(true);
-
-
-            // Check if we were successful in obtaining the map.
         }
     }
 
@@ -342,22 +345,15 @@ public class MainActivity extends ActionBarActivity implements
      */
     private void updateValuesFromBundle(Bundle savedInstanceState) {
         if (savedInstanceState != null) {
-            // Update the value of mRequestingLocationUpdates from the Bundle, and make sure that
-            // the Start Updates and Stop Updates buttons are correctly enabled or disabled.
             if (savedInstanceState.keySet().contains(REQUESTING_LOCATION_UPDATES_KEY)) {
                 mRequestingLocationUpdates = savedInstanceState.getBoolean(
                         REQUESTING_LOCATION_UPDATES_KEY);
             }
 
-            // Update the value of mCurrentLocation from the Bundle and update the UI to show the
-            // correct latitude and longitude.
             if (savedInstanceState.keySet().contains(LOCATION_KEY)) {
-                // Since LOCATION_KEY was found in the Bundle, we can be sure that mCurrentLocation
-                // is not null.
                 mCurrentLocation = savedInstanceState.getParcelable(LOCATION_KEY);
             }
 
-            // Update the value of mLastUpdateTime from the Bundle and update the UI.
             if (savedInstanceState.keySet().contains(LAST_UPDATED_TIME_STRING_KEY)) {
                 mLastUpdateTime = savedInstanceState.getString(LAST_UPDATED_TIME_STRING_KEY);
             }
@@ -394,8 +390,8 @@ public class MainActivity extends ActionBarActivity implements
      */
     protected void createLocationRequest() {
         mLocationRequest = new LocationRequest();
-        mLocationRequest.setInterval(10000);
-        mLocationRequest.setFastestInterval(5000);
+        mLocationRequest.setInterval(5000);
+        mLocationRequest.setFastestInterval(2500);
         mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
     }
 
