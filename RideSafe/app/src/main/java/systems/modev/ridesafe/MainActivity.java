@@ -335,6 +335,8 @@ public class MainActivity extends ActionBarActivity implements
             // Try to obtain the map from the SupportMapFragment.
             mMap = ((SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map)).getMap();
             mMap.setMyLocationEnabled(true);
+            mMap.setBuildingsEnabled(true); // turns on 3d buildings
+            mMap.setTrafficEnabled(true); // turns on traffic view
         }
     }
 
