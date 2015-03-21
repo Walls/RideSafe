@@ -7,13 +7,13 @@ $(document).ready(function(){
 
         setTimeout(function(){
             $('body').addClass('fadeout');
+            var errorId = document.getElementById("error");
+            errorId.style.display = "block";
+
+            var mapId = document.getElementById("map");
+            mapId.style.display = "none"; 
         }, 3000);
 
-        var errorId = document.getElementById("error");
-        errorId.style.display = "block";
-
-        var mapId = document.getElementById("map-canvas");
-        mapId.style.display = "none"; 
     }
     
     function getToken(urlQS){
@@ -23,8 +23,14 @@ $(document).ready(function(){
             datatype: "text",
             data: {"URL": urlQS},
             success: function(scriptToken){
+                if(scriptToken.length=0){
+                    goToError();
+                }
                 token=String(scriptToken);
 
+            },
+            error: function(error){
+                goToError();
             }
         })
         
@@ -37,9 +43,9 @@ $(document).ready(function(){
         var marker = null;
         var firstMarker = null;
         
-        map = new google.maps.Map(document.getElementById('map-canvas'), {center: myLatlng, zoom: 17});
+        map = new google.maps.Map(document.getElementById('map-canvas'), {center: myLatlng, zoom: 16});
 
-            ref.child(queryString).on("child_added", function(snapshot) {
+            ref.on("child_added", function(snapshot) {
             var gpsCord = snapshot.val();
             //create Latlng maps var using gpsCord String
             var resStr = gpsCord.split(" ");
@@ -55,7 +61,8 @@ $(document).ready(function(){
             if(prevLatlng==null && myLatlng!=null){
                     firstMarker = new google.maps.Marker({
                     position: myLatlng,
-                    title:"Starting Position"
+                    title:"Starting Position",
+                    icon: 'img/start_marker.png'
                 });
                 firstMarker.setMap(map);
             }
@@ -78,7 +85,8 @@ $(document).ready(function(){
                 
                 marker = new google.maps.Marker({
                     position: myLatlng,
-                    title:"Last Recorded Position"
+                    title:"Last Recorded Position",
+                    icon: 'img/end_marker.png'
                 });
                 marker.setMap(map);
                 
@@ -95,32 +103,29 @@ $(document).ready(function(){
      
     //Create firebase reference, start Auth
     function construct(){
-            ref = new Firebase("https://ridesafe.firebaseio.com/");
-        
+            ref = new Firebase("https://ridesafe.firebaseio.com/"+queryString);
+            if(token="undefined"){ //if construct executed before get token we want to quit right away
+             goToError();   
+            }
             ref.authWithCustomToken(token, function(error, authData) { 
                  if (error) {
                      goToError();
                   } else {
-                    ref = new Firebase("https://ridesafe.firebaseio.com/");
-                    var count=0;
+                       
                            
-                    ref.child(queryString).once('value', function(snapshot) {
-                    count++;
+                    ref.once('value', function(snapshot) {
                     if (snapshot.val() === null) {
                         goToError();
                     } 
                     else {
-                        //if we got a good child, create a map and load it up with points, fadeout of loading screen
+                        //if we got a good child, create a map and load it up with points, fadeout of loading screen    
+                        
                            google.maps.event.addDomListener(window, 'load', initialize());
 
                            google.maps.event.addListenerOnce(map, 'tilesloaded', function(){$('body').addClass('fadeout'); });
                     }//end else
 
                     });//end firebae ref
-                      
-                      //if(count==0){ //meaning it never found a child and thus never transitioned to a map
-                    //     goToError();   
-                    //    }
 
                   }//end auth else
             }, {

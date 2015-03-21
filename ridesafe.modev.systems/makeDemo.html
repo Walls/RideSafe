@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <!-- DO NOT UPLOAD TO PUBLIC_HTML -->
+    <script src= "https://cdn.firebase.com/js/client/2.2.1/firebase.js"></script>
+    <script type= "text/javascript">
+        
+        $(document).ready(function(){
+        var output="hello";
+            var ref1 = new Firebase("https://ridesafe.firebaseio.com/");
+            var ref2 = new Firebase("https://ridesafe.firebaseio.com/");      
+            ref2.on("child_added", function(snapshot) {
+                ref1.push(snapshot.val());
+                output+=snapshot.val();
+                document.getElementById("log").innerHTML=output;
+            });
+        });
+    </script>
+    </head>
+    <body>
+        <div id="log"></div>
+    </body>
+</html>
