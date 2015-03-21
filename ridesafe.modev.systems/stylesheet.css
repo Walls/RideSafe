@@ -1,5 +1,5 @@
 html, body, #map-canvas{ 
-    width:100%; 
+    height:100%; 
     margin: 0; 
     padding: 0;
     
@@ -48,7 +48,7 @@ html, body, #map-canvas{
 #error > #text > p > a >#social-img{
     padding-top: 20px;
     padding-right: 10px;
-    height:80px;
+    height:60px;
     
 }
 
