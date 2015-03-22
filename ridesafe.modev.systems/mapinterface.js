@@ -74,7 +74,7 @@ $(document).ready(function(){
                 path: [prevLatlng,myLatlng],
                 geodesic: true,
                 strokeColor: '#D916B0',
-                strokeOpacity: 1.0,
+                strokeOpacity: .75,
                 strokeWeight: 10
               });
                 //remove old marker and add a new one for the current local
@@ -104,10 +104,13 @@ $(document).ready(function(){
     //Create firebase reference, start Auth
     function construct(){
             ref = new Firebase("https://ridesafe.firebaseio.com/"+queryString);
-            if(token="undefined"){ //if construct executed before get token we want to quit right away
-             goToError();   
-            }
-            ref.authWithCustomToken(token, function(error, authData) { 
+
+            if(String(token)=="undefined"){
+                goToError();
+                window.alert("RideSafe:\n Error in authentication. Please attempt to reload. If the problem persists, contact our support team.");
+             }//token response took too long
+            else {
+                ref.authWithCustomToken(token, function(error, authData) { 
                  if (error) {
                      goToError();
                   } else {
@@ -128,11 +131,12 @@ $(document).ready(function(){
                     });//end firebae ref
 
                   }//end auth else
-            }, {
-              remember: "sessionOnly"//delete user at browser close
-            });
-        
-    }
+                }, {
+                  remember: "sessionOnly"//delete user at browser close
+                });
+                
+            }//end token else     
+    }//end construct
     
         //queryStrig extraction and firebase child check
         var queryString = window.location.search;
