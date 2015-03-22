@@ -21,12 +21,16 @@ import com.firebase.client.Firebase;
 
 import android.annotation.TargetApi;
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
+import android.location.GpsStatus;
 import android.location.Location;
+import android.location.LocationManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Vibrator;
+import android.provider.Settings;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.ActionBarActivity;
 import android.view.Gravity;
@@ -82,7 +86,7 @@ import com.google.android.gms.maps.model.PolylineOptions;
  * https://github.com/googlesamples/android-google-accounts/tree/master/QuickStart.
  */
 public class MainActivity extends ActionBarActivity implements
-        ConnectionCallbacks, OnConnectionFailedListener, LocationListener, OnMapReadyCallback {
+        ConnectionCallbacks, OnConnectionFailedListener, LocationListener, OnMapReadyCallback, GpsStatus.Listener {
 
     // Keys for storing activity state in the Bundle.
     protected final static String REQUESTING_LOCATION_UPDATES_KEY = "requesting-location-updates-key";
@@ -138,6 +142,19 @@ public class MainActivity extends ActionBarActivity implements
         Firebase.setAndroidContext(this);
         firebase = new Firebase("https://ridesafe.firebaseio.com");
 
+        // Check if GPS is enabled and if not send user to the GPS settings
+        LocationManager service = (LocationManager) getSystemService(LOCATION_SERVICE);
+        boolean enabled = service.isProviderEnabled(LocationManager.GPS_PROVIDER);
+
+        if (!enabled) {
+            Toast.makeText(getApplicationContext(), String.format("There was a problem. Please make sure you have GPS " +
+                    "and location services enabled before beginning!"), Toast.LENGTH_LONG).show();
+
+            Intent intent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
+            startActivity(intent);
+            finish();
+        }
+
         // Kick off the process of building a GoogleApiClient and requesting the LocationServices
         // API.
         buildGoogleApiClient();
@@ -145,6 +162,7 @@ public class MainActivity extends ActionBarActivity implements
         // Update values using data stored in the Bundle.
         updateValuesFromBundle(savedInstanceState);
 
+        // ensure that phone number is read correctly from file
         try {
             phoneNumber = read("number.txt", getApplicationContext());
         } catch (Exception e) {
@@ -585,4 +603,14 @@ public class MainActivity extends ActionBarActivity implements
     }
 
 
+    @Override
+    public void onGpsStatusChanged(int event) {
+        switch (event) {
+            case GpsStatus.GPS_EVENT_STOPPED:
+                Toast.makeText(getApplicationContext(), String.format("There was a problem. Please make sure you have GPS " +
+                        "and location services enabled before beginning!"), Toast.LENGTH_SHORT).show();
+                stopLocationUpdates();
+                finish();
+        }
+    }
 }
