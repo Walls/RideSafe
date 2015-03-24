@@ -2,9 +2,9 @@ $(document).ready(function(){
     var map;  
     var ref;
     var token;
-
+    $('#status').append("Loading<br/>");
     function goToError(){
-
+        
         setTimeout(function(){
             $('body').addClass('fadeout');
             var errorId = document.getElementById("error");
@@ -27,9 +27,11 @@ $(document).ready(function(){
                     goToError();
                 }
                 token=String(scriptToken);
+                $('#status').append("Connection established.<br/>");
 
             },
             error: function(error){
+                    $('#status').append("Authentication Error<br/>");
                 goToError();
             }
         })
@@ -43,8 +45,8 @@ $(document).ready(function(){
         var marker = null;
         var firstMarker = null;
         
-        map = new google.maps.Map(document.getElementById('map-canvas'), {center: myLatlng, zoom: 16});
-
+            map = new google.maps.Map(document.getElementById('map-canvas'), {center: myLatlng, zoom: 16});
+            $('#status').append("Waiting on coordinate data.<br/>");
             ref.on("child_added", function(snapshot) {
             var gpsCord = snapshot.val();
             //create Latlng maps var using gpsCord String
@@ -59,6 +61,7 @@ $(document).ready(function(){
             
             //set begining point
             if(prevLatlng==null && myLatlng!=null){
+                    $('#status').append("Waiting on additional data.<br/>");
                     firstMarker = new google.maps.Marker({
                     position: myLatlng,
                     title:"Starting Position",
@@ -108,22 +111,24 @@ $(document).ready(function(){
 
             if(String(token)=="undefined"){
                 goToError();
-                window.alert("RideSafe:\n Error in authentication. Please attempt to reload. If the problem persists, contact our support team.");
+                $('#status').append("Authentication Error. Please attempt to reload.<br/>");
              }//token response took too long
             else {
                 ref.authWithCustomToken(token, function(error, authData) { 
                  if (error) {
+                     $('#status').append("Authentication Error.<br/>");
                      goToError();
                   } else {
                        
                            
                     ref.once('value', function(snapshot) {
                     if (snapshot.val() === null) {
+                        $('#status').append("Data missing<br/>. Please attempt to reload.<br/>");
                         goToError();
                     } 
                     else {
                         //if we got a good child, create a map and load it up with points, fadeout of loading screen    
-                        
+                        $('#status').append("Connection to data established.<br/>");
                            google.maps.event.addDomListener(window, 'load', initialize());
 
                            google.maps.event.addListenerOnce(map, 'tilesloaded', function(){$('body').addClass('fadeout'); });
@@ -142,11 +147,13 @@ $(document).ready(function(){
         //queryStrig extraction and firebase child check
         var queryString = window.location.search;
         queryString = queryString.substring(1);
-        if(queryString.length == 0){ 
+        if(queryString.length == 0){
+             $('#status').append("Invalid map URL.<br/>");
             goToError();
         }
         else{
-            //get tokens from makeAuthToken.py, then go to constructor 
+            //get tokens from makeAuthToken.py, then go to constructor
+            $('#status').append("Attempting to authenticate and create map.<br/>");
             getToken(queryString);
             setTimeout(function(){
                 construct();
