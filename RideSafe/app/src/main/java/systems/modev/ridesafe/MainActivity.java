@@ -22,17 +22,23 @@ import com.firebase.client.Firebase;
 import android.annotation.TargetApi;
 import android.content.Context;
 import android.content.Intent;
+import android.database.Cursor;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.location.GpsStatus;
 import android.location.Location;
 import android.location.LocationManager;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Vibrator;
+import android.provider.ContactsContract;
 import android.provider.Settings;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.ActionBarActivity;
+import android.telephony.PhoneNumberUtils;
 import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -135,6 +141,9 @@ public class MainActivity extends ActionBarActivity implements
      * Time when the location was updated represented as a String.
      */
     protected String mLastUpdateTime;
+
+    protected final int CONTACT_CODE = 1234;
+
     @TargetApi(Build.VERSION_CODES.LOLLIPOP)
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -143,10 +152,7 @@ public class MainActivity extends ActionBarActivity implements
         firebase = new Firebase("https://ridesafe.firebaseio.com");
 
         // Check if GPS is enabled and if not send user to the GPS settings
-        LocationManager service = (LocationManager) getSystemService(LOCATION_SERVICE);
-        boolean enabled = service.isProviderEnabled(LocationManager.GPS_PROVIDER);
-
-        if (!enabled) {
+        if (!haveGPSConnection()) {
             Toast.makeText(getApplicationContext(), String.format("There was a problem. Please make sure you have GPS " +
                     "and location services enabled before beginning!"), Toast.LENGTH_LONG).show();
 
@@ -154,6 +160,18 @@ public class MainActivity extends ActionBarActivity implements
             startActivity(intent);
             finish();
         }
+
+        // Check if mobile data is enabled and if not send user to the mobile data settings
+        if (!haveNetworkConnection()) {
+            Toast.makeText(getApplicationContext(), String.format("There was a problem. Please ensure you are connected to mobile data" +
+                    " and GPS/location services."), Toast.LENGTH_LONG).show();
+
+            Intent intent = new Intent(Settings.ACTION_DATA_ROAMING_SETTINGS);
+            startActivity(intent);
+            finish();
+
+        }
+
 
         // Kick off the process of building a GoogleApiClient and requesting the LocationServices
         // API.
@@ -190,8 +208,12 @@ public class MainActivity extends ActionBarActivity implements
 
                 try {
                     if (isChecked) { // if the user just enabled updates
-                        if (phoneNumber == null || phoneNumber.equals("") || phoneNumber.length() < 9 || phoneNumber.length() > 15)
+                        mCurrentLocation = LocationServices.FusedLocationApi.getLastLocation(mGoogleApiClient);
+                        resetCoordinates();
+
+                        if (phoneNumber == null || phoneNumber.equals("")) {
                             throw new IllegalArgumentException();
+                        }
 
                         else {
                             startLocationUpdates();
@@ -200,8 +222,6 @@ public class MainActivity extends ActionBarActivity implements
                             // create a new child in the table each time the user starts tracking
                             firebase = new Firebase("https://ridesafe.firebaseio.com");
                             authenticateFirebase();
-
-
                         }
                     }
 
@@ -212,17 +232,19 @@ public class MainActivity extends ActionBarActivity implements
                         mToggleButton.setBackground(getResources().getDrawable(R.drawable.begintrackingbuttonsmall));
 
                     }
-                } catch (Exception e) {
+                } catch (IllegalArgumentException e) {
                     e.printStackTrace();
                     mToggleButton.setChecked(false); // prevent button from toggling when no phone # is not known
-                    if(phoneNumber == null) {
-                        Toast.makeText(getApplicationContext(), String.format("Please enter a trusted phone number (using the button in the top right) before" +
-                                " tracking."), Toast.LENGTH_SHORT).show();
-                    }
-                    else
-                        Toast.makeText(getApplicationContext(), String.format("There was a problem. Please re-enter your safe contact number using" +
-                                " the button in the top right."), Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getApplicationContext(), String.format("Please choose a trusted contact" +
+                                " (using the button in the top right) before tracking."), Toast.LENGTH_SHORT).show();
 
+                }
+
+                catch (NullPointerException e) {
+                    e.printStackTrace();
+                    Toast.makeText(getApplicationContext(), String.format("There was a problem. Please ensure you are connected to mobile data" +
+                            " and GPS/location services."), Toast.LENGTH_LONG).show();
+                    finish();
                 }
 
             }
@@ -290,50 +312,37 @@ public class MainActivity extends ActionBarActivity implements
 
     public boolean onOptionsItemSelected(MenuItem item) {
         // Handle presses on the action bar items
+        Vibrator vibrator = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
+
         switch (item.getItemId()) {
 
             case R.id.action_contacts:
-                PromptDialog dlg = new PromptDialog(MainActivity.this, R.string.prompt_title, R.string.prompt_comment) {
-                        @Override
-                        public boolean onOkClicked(String input) {
-                            try {
-                                if (input == null || input.equals("") || input.length() < 9 || input.length() > 15)
-                                    throw new IllegalArgumentException();
-
-                                else {
-                                    write("number.txt", getBaseContext(), input);
-                                    phoneNumber = input;
-                                    SmsManager.getDefault().sendTextMessage(phoneNumber, null, "I just set you as my trusted contact in RideSafe. "
-                                            + "Ask me about it!", null, null);
-                                    Toast.makeText(getApplicationContext(), String.format("%s successfully registered as trusted contact!", phoneNumber), Toast.LENGTH_SHORT).show();
-                                }
-                            }
-
-                            catch (Exception e) {
-                                e.printStackTrace();
-                                Toast.makeText(getApplicationContext(), String.format("Error: invalid phone number entered. Please try again!"), Toast.LENGTH_SHORT).show();
-                            }
-
-                            return true;
-                        }
-                    };
-                dlg.show();
+                vibrator.vibrate(250);
+                Intent pickContactIntent = new Intent(Intent.ACTION_PICK, ContactsContract.CommonDataKinds.Phone.CONTENT_URI);
+                pickContactIntent.setType(ContactsContract.CommonDataKinds.Phone.CONTENT_TYPE);
+                startActivityForResult(pickContactIntent, CONTACT_CODE);
                 break;
 
 
             case R.id.action_help:
+                vibrator.vibrate(250);
                 try {
+                    if (link != null && !link.equals("")) { // if link contains a valid UID
+                        SmsManager.getDefault().sendTextMessage(phoneNumber, null, "I pressed the HELP button in RideSafe! " +
+                                String.format("Please make sure I'm okay by checking my map at %s", link), null, null);
 
-                    SmsManager.getDefault().sendTextMessage(phoneNumber, null, "I pressed the HELP button in RideSafe! " +
-                            String.format("Please make sure I'm okay by checking my map at %s", link), null, null);
+                        Toast.makeText(getApplicationContext(), String.format("Emergency message sent to: %s", phoneNumber), Toast.LENGTH_SHORT).show();
+                    }
 
-                    Toast.makeText(getApplicationContext(), String.format("Emergency message sent to: %s", phoneNumber), Toast.LENGTH_SHORT).show();
+                    else { // if link is empty
+                        Toast.makeText(getApplicationContext(), String.format("Please begin tracking first."), Toast.LENGTH_SHORT).show();
+                    }
                 }
 
                 catch (Exception e){  // file is malformed
                     e.printStackTrace();
                     if(phoneNumber == null) {
-                        Toast.makeText(getApplicationContext(), String.format("Please enter a trusted phone number (using the button in the top right) before" +
+                        Toast.makeText(getApplicationContext(), String.format("Please choose a trusted contact (using the button in the top right) before" +
                                 " tracking."), Toast.LENGTH_SHORT).show();
 
                         // recreate();
@@ -353,6 +362,45 @@ public class MainActivity extends ActionBarActivity implements
         return true;
     }
 
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if(requestCode == CONTACT_CODE && resultCode == RESULT_OK) {
+            try {
+                Uri uri = data.getData();
+                Cursor cursor = getContentResolver().query(uri, null, null, null, null);
+                cursor.moveToFirst();
+
+                int phoneIndex = cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER);
+                phoneNumber = cursor.getString(phoneIndex);
+
+                try {
+                    // if phone number is null/empty, or doesn't match a US or global phone number
+                    if ((phoneNumber == null) || phoneNumber.equals("") || !isValidPhoneNumber(phoneNumber)) {
+                        System.out.println("PHONE NUMBER = " + phoneNumber);
+                        throw new IllegalArgumentException();
+                    }
+
+                    else {
+                        write("number.txt", getBaseContext(), phoneNumber);
+                        SmsManager.getDefault().sendTextMessage(phoneNumber, null, "I just set you as my trusted contact in RideSafe. "
+                                + "Ask me about it!", null, null);
+                        Toast.makeText(getApplicationContext(), String.format("%s successfully registered as trusted contact!", phoneNumber), Toast.LENGTH_SHORT).show();
+                    }
+                }
+                catch (Exception e) {
+                    e.printStackTrace();
+                    phoneNumber = null;
+                    Toast.makeText(getApplicationContext(), String.format("Error: invalid phone number. Please choose another contact."), Toast.LENGTH_SHORT).show();
+                }
+
+                cursor.close();
+
+            } catch (NullPointerException e) {
+                e.printStackTrace();
+                Toast.makeText(getApplicationContext(), String.format("There was a problem retrieving the contact data."), Toast.LENGTH_SHORT).show();
+            }
+        }
+    }
+
     private void setUpMapIfNeeded() {
         // Do a null check to confirm that we have not already instantiated the map.
         if (mMap == null) {
@@ -360,7 +408,7 @@ public class MainActivity extends ActionBarActivity implements
             mMap = ((SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map)).getMap();
             mMap.setMyLocationEnabled(true);
             mMap.setBuildingsEnabled(true); // turns on 3d buildings
-            mMap.setTrafficEnabled(true); // turns on traffic view
+            mMap.setTrafficEnabled(false); // turns off traffic view
         }
     }
 
@@ -436,10 +484,7 @@ public class MainActivity extends ActionBarActivity implements
      */
     private void updateCoords() {
         if (pLongitude == 0 || pLatitude == 0 || mLongitude == 0 || mLatitude == 0) {
-            pLatitude = mCurrentLocation.getLatitude();
-            pLongitude = mCurrentLocation.getLongitude();
-            mLatitude = mCurrentLocation.getLatitude();
-            mLongitude = mCurrentLocation.getLongitude();
+            resetCoordinates();
         }
 
         else {
@@ -613,4 +658,42 @@ public class MainActivity extends ActionBarActivity implements
                 finish();
         }
     }
+
+    public boolean isValidPhoneNumber(String number) {
+        // returns true if number is a valid US or Global number
+        return PhoneNumberUtils.isGlobalPhoneNumber(number) || number.matches("1?[\\s-]?\\(?(\\d{3})\\)?[\\s-]?\\d{3}[\\s-]?\\d{4}");
+    }
+
+    public void resetCoordinates () {
+        try {
+            pLatitude = mLatitude = mCurrentLocation.getLatitude();
+            pLongitude = mLongitude = mCurrentLocation.getLongitude();
+            mLastUpdateTime = DateFormat.getDateTimeInstance().format(new Date());
+        } catch (NullPointerException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private boolean haveNetworkConnection() {
+        boolean haveConnectedWifi = false;
+        boolean haveConnectedMobile = false;
+
+        ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo[] netInfo = cm.getAllNetworkInfo();
+        for (NetworkInfo ni : netInfo) {
+            if (ni.getTypeName().equalsIgnoreCase("WIFI"))
+                if (ni.isConnected())
+                    haveConnectedWifi = true;
+            if (ni.getTypeName().equalsIgnoreCase("MOBILE"))
+                if (ni.isConnected())
+                    haveConnectedMobile = true;
+        }
+        return haveConnectedWifi || haveConnectedMobile;
+    }
+
+    private boolean haveGPSConnection() {
+        LocationManager service = (LocationManager) getSystemService(LOCATION_SERVICE);
+        return service.isProviderEnabled(LocationManager.GPS_PROVIDER);
+    }
+
 }
