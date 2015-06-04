@@ -18,7 +18,7 @@ $(document).ready(function(){
     
     function getToken(urlQS){
         $.ajax({
-            url: "http://ridesafe.modev.systems/cgi-bin/makeAuthToken.py",
+            url: "http://morrisit.com/ridesafe/cgi-bin/makeAuthToken.py",
             type: "post",
             datatype: "text",
             data: {"URL": urlQS},
