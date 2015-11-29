@@ -1,15 +1,17 @@
 apply plugin: 'com.android.application'
 
 android {
-    compileSdkVersion 21
-    buildToolsVersion "21.1.2"
+    compileSdkVersion 23
+    buildToolsVersion "23.0.2"
 
     defaultConfig {
         applicationId "systems.modev.ridesafe"
         minSdkVersion 16
-        targetSdkVersion 21
-        versionCode 5
-        versionName "1.1"
+        targetSdkVersion 23
+        versionCode 6
+        versionName "1.2"
+        multiDexEnabled true
+
     }
     buildTypes {
         release {
@@ -21,7 +23,10 @@ android {
 
 dependencies {
     compile fileTree(include: ['*.jar'], dir: 'libs')
-    compile 'com.google.android.gms:play-services:6.5.87'
-    compile 'com.android.support:appcompat-v7:21.0.3'
     compile files('libs/firebase-client-android-2.2.1.jar')
+    compile 'com.google.android.gms:play-services:8.3.0'
+    compile 'com.android.support:appcompat-v7:23.1.1'
+    compile 'com.google.android.gms:play-services-ads:8.3.0'
+    compile 'com.google.android.gms:play-services-identity:8.3.0'
+    compile 'com.google.android.gms:play-services-gcm:8.3.0'
 }

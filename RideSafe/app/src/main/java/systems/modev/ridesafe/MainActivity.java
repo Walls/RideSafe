@@ -38,6 +38,7 @@ import android.provider.ContactsContract;
 import android.provider.Settings;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.ActionBarActivity;
+import android.support.v7.app.AppCompatActivity;
 import android.telephony.PhoneNumberUtils;
 import android.view.Gravity;
 import android.view.Menu;
@@ -91,7 +92,7 @@ import com.google.android.gms.maps.model.PolylineOptions;
  * uses Google Play services for authentication, see
  * https://github.com/googlesamples/android-google-accounts/tree/master/QuickStart.
  */
-public class MainActivity extends ActionBarActivity implements
+public class MainActivity extends AppCompatActivity implements
         ConnectionCallbacks, OnConnectionFailedListener, LocationListener, OnMapReadyCallback, GpsStatus.Listener {
 
     // Keys for storing activity state in the Bundle.
@@ -147,6 +148,8 @@ public class MainActivity extends ActionBarActivity implements
     @TargetApi(Build.VERSION_CODES.LOLLIPOP)
     @Override
     public void onCreate(Bundle savedInstanceState) {
+
+        // TODO: CHECK FOR PERMISSIONS USING NEW API HERE
         super.onCreate(savedInstanceState);
         Firebase.setAndroidContext(this);
         firebase = new Firebase("https://ridesafe.firebaseio.com");
@@ -253,16 +256,19 @@ public class MainActivity extends ActionBarActivity implements
 
         // Style action bar
         ActionBar actionBar = getSupportActionBar();
-        actionBar.setBackgroundDrawable(new ColorDrawable(Color.rgb(0, 209, 202)));
-        actionBar.setDisplayOptions(actionBar.getDisplayOptions() | ActionBar.DISPLAY_SHOW_CUSTOM);
-        ImageView imageView = new ImageView(actionBar.getThemedContext());
-        imageView.setScaleType(ImageView.ScaleType.CENTER);
-        imageView.setImageResource(R.drawable.newlogosmall);
-        ActionBar.LayoutParams layoutParams = new ActionBar.LayoutParams(ActionBar.LayoutParams.WRAP_CONTENT, ActionBar.LayoutParams.WRAP_CONTENT, Gravity.LEFT | Gravity.CENTER_VERTICAL);
-        layoutParams.rightMargin = 40;
-        imageView.setLayoutParams(layoutParams);
-        actionBar.setCustomView(imageView);
-        actionBar.setTitle("");
+        if (actionBar != null) {
+            actionBar.setBackgroundDrawable(new ColorDrawable(Color.rgb(0, 209, 202)));
+
+            actionBar.setDisplayOptions(actionBar.getDisplayOptions() | ActionBar.DISPLAY_SHOW_CUSTOM);
+            ImageView imageView = new ImageView(actionBar.getThemedContext());
+            imageView.setScaleType(ImageView.ScaleType.CENTER);
+            imageView.setImageResource(R.drawable.newlogosmall);
+            ActionBar.LayoutParams layoutParams = new ActionBar.LayoutParams(ActionBar.LayoutParams.WRAP_CONTENT, ActionBar.LayoutParams.WRAP_CONTENT, Gravity.START | Gravity.CENTER_VERTICAL);
+            layoutParams.rightMargin = 40;
+            imageView.setLayoutParams(layoutParams);
+            actionBar.setCustomView(imageView);
+            actionBar.setTitle("");
+        }
 
 
         // Style status bar (only for Lollipop+ devices)
@@ -287,9 +293,9 @@ public class MainActivity extends ActionBarActivity implements
             public void onAuthenticated(AuthData authData) {
                 // we've authenticated this session with Firebase
                 // authData object contains getter methods
-                String extension = authData.getUid().split("-")[1];
+                String extension = authData.getUid();
                 firebase = firebase.child(extension);
-                link = "http://ridesafe.modev.systems/?" + extension;
+                link = "http://map.getridesafe.com/?" + extension;
                 SmsManager.getDefault().sendTextMessage(phoneNumber, null, "I pressed the TRACK button in RideSafe! " +
                         String.format("Please track me at: %s", link), null, null);
             }
@@ -335,15 +341,15 @@ public class MainActivity extends ActionBarActivity implements
                     }
 
                     else { // if link is empty
-                        Toast.makeText(getApplicationContext(), String.format("Please begin tracking first."), Toast.LENGTH_SHORT).show();
+                        Toast.makeText(getApplicationContext(), "Please begin tracking first.", Toast.LENGTH_SHORT).show();
                     }
                 }
 
                 catch (Exception e){  // file is malformed
                     e.printStackTrace();
                     if(phoneNumber == null) {
-                        Toast.makeText(getApplicationContext(), String.format("Please choose a trusted contact (using the button in the top right) before" +
-                                " tracking."), Toast.LENGTH_SHORT).show();
+                        Toast.makeText(getApplicationContext(), "Please choose a trusted contact (using the button in the top right) before" +
+                                " tracking.", Toast.LENGTH_SHORT).show();
 
                         // recreate();
 
@@ -363,7 +369,7 @@ public class MainActivity extends ActionBarActivity implements
     }
 
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if(requestCode == CONTACT_CODE && resultCode == RESULT_OK) {
+        if (requestCode == CONTACT_CODE && resultCode == RESULT_OK) {
             try {
                 Uri uri = data.getData();
                 Cursor cursor = getContentResolver().query(uri, null, null, null, null);
@@ -389,14 +395,14 @@ public class MainActivity extends ActionBarActivity implements
                 catch (Exception e) {
                     e.printStackTrace();
                     phoneNumber = null;
-                    Toast.makeText(getApplicationContext(), String.format("Error: invalid phone number. Please choose another contact."), Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getApplicationContext(), "Error: invalid phone number. Please choose another contact.", Toast.LENGTH_SHORT).show();
                 }
 
                 cursor.close();
 
             } catch (NullPointerException e) {
                 e.printStackTrace();
-                Toast.makeText(getApplicationContext(), String.format("There was a problem retrieving the contact data."), Toast.LENGTH_SHORT).show();
+                Toast.makeText(getApplicationContext(), "There was a problem retrieving the contact data.", Toast.LENGTH_SHORT).show();
             }
         }
     }
@@ -633,15 +639,13 @@ public class MainActivity extends ActionBarActivity implements
     }
 
     public static String read (String filename,Context c) throws IOException{
-        String read = "";
-        StringBuffer buffer = new StringBuffer();
+        String read;
+        StringBuilder buffer = new StringBuilder();
 
         FileInputStream fis = c.openFileInput(filename);
         BufferedReader reader = new BufferedReader(new InputStreamReader(fis));
-        if (fis!=null) {
-            while ((read = reader.readLine()) != null) {
-                buffer.append(read + "\n" );
-            }
+        while ((read = reader.readLine()) != null) {
+            buffer.append(read).append("\n");
         }
         fis.close();
         return buffer.toString();
@@ -652,8 +656,8 @@ public class MainActivity extends ActionBarActivity implements
     public void onGpsStatusChanged(int event) {
         switch (event) {
             case GpsStatus.GPS_EVENT_STOPPED:
-                Toast.makeText(getApplicationContext(), String.format("There was a problem. Please make sure you have GPS " +
-                        "and location services enabled before beginning!"), Toast.LENGTH_SHORT).show();
+                Toast.makeText(getApplicationContext(), "There was a problem. Please make sure you have GPS " +
+                        "and location services enabled before beginning!", Toast.LENGTH_SHORT).show();
                 stopLocationUpdates();
                 finish();
         }
