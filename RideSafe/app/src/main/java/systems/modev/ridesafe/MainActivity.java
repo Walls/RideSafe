@@ -22,7 +22,10 @@ import com.firebase.client.Firebase;
 import android.annotation.TargetApi;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.database.Cursor;
+import android.database.sqlite.SQLiteCursor;
+import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.location.GpsStatus;
@@ -36,6 +39,9 @@ import android.os.Bundle;
 import android.os.Vibrator;
 import android.provider.ContactsContract;
 import android.provider.Settings;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
+import android.support.v4.content.PermissionChecker;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.ActionBarActivity;
 import android.support.v7.app.AppCompatActivity;
@@ -70,6 +76,8 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.text.DateFormat;
 import java.util.Date;
+import java.util.LinkedList;
+
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
@@ -78,6 +86,7 @@ import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.PolylineOptions;
 
+import static android.Manifest.permission;
 /**
  * Getting Location Updates.
  *
@@ -101,7 +110,8 @@ public class MainActivity extends AppCompatActivity implements
     protected final static String LAST_UPDATED_TIME_STRING_KEY = "last-updated-time-string-key";
     protected GoogleMap mMap;
     protected String phoneNumber;
-
+    SQLiteDatabase database;
+    Cursor dbcursor;
     protected Firebase firebase;
 
 
@@ -148,11 +158,12 @@ public class MainActivity extends AppCompatActivity implements
     @TargetApi(Build.VERSION_CODES.LOLLIPOP)
     @Override
     public void onCreate(Bundle savedInstanceState) {
+        // Ensure we have the necessary permissions before moving forward
+        if (Build.VERSION.SDK_INT >= 23) {
+            checkPermissions();
+        }
 
-        // TODO: CHECK FOR PERMISSIONS USING NEW API HERE
         super.onCreate(savedInstanceState);
-        Firebase.setAndroidContext(this);
-        firebase = new Firebase("https://ridesafe.firebaseio.com");
 
         // Check if GPS is enabled and if not send user to the GPS settings
         if (!haveGPSConnection()) {
@@ -175,17 +186,26 @@ public class MainActivity extends AppCompatActivity implements
 
         }
 
-
         // Kick off the process of building a GoogleApiClient and requesting the LocationServices
         // API.
         buildGoogleApiClient();
 
+        // initialize Firebase
+        Firebase.setAndroidContext(this);
+        firebase = new Firebase("https://ridesafe.firebaseio.com");
+
         // Update values using data stored in the Bundle.
         updateValuesFromBundle(savedInstanceState);
 
-        // ensure that phone number is read correctly from file
+        // ensure that phone number is read correctly from database
         try {
-            phoneNumber = read("number.txt", getApplicationContext());
+            database = openOrCreateDatabase("ridsafe_db", MODE_PRIVATE, null);
+            database.execSQL("CREATE TABLE IF NOT EXISTS numbers(number VARCHAR);");
+            dbcursor = database.rawQuery("select number from numbers", null);
+            dbcursor.moveToFirst();
+            if (dbcursor.getCount() > 0)
+                phoneNumber = dbcursor.getString(0);
+            dbcursor.close();
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -270,7 +290,6 @@ public class MainActivity extends AppCompatActivity implements
             actionBar.setTitle("");
         }
 
-
         // Style status bar (only for Lollipop+ devices)
         try {
             Window window = this.getWindow();
@@ -282,9 +301,45 @@ public class MainActivity extends AppCompatActivity implements
         catch (NoSuchMethodError e) {
             e.printStackTrace();
         }
+    }
 
-        /*firebase = new Firebase("https://ridesafe.firebaseio.com");
-        authenticateFirebase();*/
+    @TargetApi(23)
+    private void checkPermissions() {
+        String[] permissions_all = {
+                permission.INTERNET, permission.VIBRATE, permission.ACCESS_NETWORK_STATE,
+                permission.WRITE_EXTERNAL_STORAGE, permission.SEND_SMS,
+                permission.ACCESS_COARSE_LOCATION, permission.ACCESS_FINE_LOCATION,
+                permission.READ_CONTACTS
+        };
+        LinkedList<String> permissions_list = new LinkedList<>();
+
+        for (String permission : permissions_all) {
+            if (PermissionChecker.checkSelfPermission(this, permission) !=
+                    PermissionChecker.PERMISSION_GRANTED) {
+                permissions_list.add(permission);
+            }
+        }
+
+
+        String[] permissions = new String[permissions_list.size()];
+        permissions_list.toArray(permissions);
+
+        if (permissions.length > 0)
+            requestPermissions(permissions, 13);
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
+        switch (requestCode) {
+            case 13:
+                if (grantResults.length <= 0)
+                    System.exit(13);
+                for (int result : grantResults) {
+                    if (result != PackageManager.PERMISSION_GRANTED)
+                        System.exit(13);
+                }
+                break;
+        }
     }
 
     protected void authenticateFirebase() {
@@ -354,8 +409,6 @@ public class MainActivity extends AppCompatActivity implements
                         // recreate();
 
                     }
-                    File file = new File("number.txt");
-                    file.delete();
                     e.printStackTrace();
                 }
 
@@ -381,12 +434,16 @@ public class MainActivity extends AppCompatActivity implements
                 try {
                     // if phone number is null/empty, or doesn't match a US or global phone number
                     if ((phoneNumber == null) || phoneNumber.equals("") || !isValidPhoneNumber(phoneNumber)) {
-                        System.out.println("PHONE NUMBER = " + phoneNumber);
                         throw new IllegalArgumentException();
                     }
 
                     else {
-                        write("number.txt", getBaseContext(), phoneNumber);
+                        if (!database.isOpen())
+                            database = openOrCreateDatabase("ridsafe_db", MODE_PRIVATE, null);
+                        database.execSQL("DROP TABLE IF EXISTS numbers;");
+                        database.execSQL("CREATE TABLE IF NOT EXISTS numbers(number VARCHAR);");
+                        database.execSQL(String.format("INSERT INTO numbers VALUES(\'%s\');", phoneNumber));
+
                         SmsManager.getDefault().sendTextMessage(phoneNumber, null, "I just set you as my trusted contact in RideSafe. "
                                 + "Ask me about it!", null, null);
                         Toast.makeText(getApplicationContext(), String.format("%s successfully registered as trusted contact!", phoneNumber), Toast.LENGTH_SHORT).show();
@@ -399,6 +456,8 @@ public class MainActivity extends AppCompatActivity implements
                 }
 
                 cursor.close();
+                dbcursor.close();
+                database.close();
 
             } catch (NullPointerException e) {
                 e.printStackTrace();
